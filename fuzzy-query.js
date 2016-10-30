@@ -246,5 +246,10 @@ var Q = function() {
       return null;
     }
   };
-  return main(Array.prototype.slice.call(arguments));
+  // Allow one argument of array or many arguments of string. 
+  if (Array.isArray(arguments[0])) {
+    return main(arguments[0]);  
+  } else {
+    return main(Array.prototype.slice.call(arguments));
+  }
 };
