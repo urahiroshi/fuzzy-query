@@ -224,13 +224,6 @@ var Q = function() {
     });
   };
 
-  var findLatestBySelector = function (current, selector) {
-    return findLatest(current, function (node) {
-      // TODO: more speedy search
-      return findDeepsBySelector(node, selector)[0];
-    });
-  };
-
   var findLatestsBySelector = function (current, selector) {
     return findLatests(current, function(node) {
       return findDeepsBySelector(node, selector);
