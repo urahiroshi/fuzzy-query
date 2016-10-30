@@ -36,21 +36,39 @@ var Q = function() {
     self.select = function (value) {
       if (value) {
         // Set RegExp value to select option in latest selectable element.
-        var targetElement = findLatestBySelector(self.node, value).parentElement;
-        _selectElement(targetElement);
-      } else {
-        // Set no arguments to select / check this element.
-        if (isTargetInput(self.element, ['option'], [])) {
-          _selectElement(self.element);
-        } else {
-          _checkElement(self.element);
+        var parentElement = findLatestByInputMethod(self.node, 'select');
+        var children = parentElement.childNodes;
+        for(var i = 0, max = children.length; i < max; i++) {
+          if (
+            children[i].nodeType == Node.ELEMENT_NODE &&
+            isTargetInput(children[i], ['option']) &&
+            matchWith(children[i], value)
+          ) {
+            _selectElement(children[i]);
+            return;
+          }
         }
+      } else {
+        // Set no arguments to check this element.
+        _checkElement(self.element);
       }
     };
 
   };
 
   var root = document.querySelector('body');
+
+  var isCandidate = function (node) {
+    return (
+      node.nodeType === Node.ELEMENT_NODE &&
+      (
+        // is visible element ?
+        node.offsetWidth > 0 ||
+        node.offsetHeight > 0 ||
+        node.getClientRects().length > 0
+      )
+    ) || (node.nodeType === Node.TEXT_NODE);
+  };
 
   var innerText = function (element) {
     return element.textContent.trim().replace(/\n/g, ' ').replace(/ +/g, ' ');
@@ -109,10 +127,7 @@ var Q = function() {
       // filter method
       function (node) {
         return (
-          (
-            node.nodeType === Node.ELEMENT_NODE ||
-            node.nodeType === Node.TEXT_NODE
-          ) &&
+          isCandidate(node) &&
           containsWith(node, selector)
         );
       }
@@ -141,12 +156,7 @@ var Q = function() {
 
   var findLatests = function (current, findMethod) {
     var parent = current.parentElement;
-    var bros = Array.prototype.filter.call(parent.childNodes, function (child) {
-      return (
-        child.nodeType === Node.ELEMENT_NODE ||
-        child.nodeType === Node.TEXT_NODE
-      );
-    });
+    var bros = Array.prototype.filter.call(parent.childNodes, isCandidate);
     var currentIndex = bros.indexOf(current);
     var candidates = bros.slice(currentIndex + 1).reduce(function (results, brother) {
       return results.concat(findMethod(brother));
