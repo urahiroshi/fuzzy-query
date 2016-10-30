@@ -1,19 +1,27 @@
 var Q = function() {
   var root = document.querySelector('body');
 
+  var innerText = function (element) {
+    return element.textContent.trim().replace(/\n/g, ' ').replace(/ +/g, ' ');
+  };
+
   var containsWith = function (element, selector) {
-    return (new RegExp(selector)).test(element.textContent.trim());
+    return (new RegExp(selector)).test(innerText(element));
   };
 
   var matchWith = function (element, selector) {
-    return (new RegExp('^' + selector + '$')).test(element.textContent.trim());
-  }
+    return (new RegExp('^' + selector + '$')).test(innerText(element));
+  };
 
+  // Find nodes having selector in later brothers of current node and ancestors of current node.
   var findLatestParents = function (parent, selector) {
     if (containsWith(parent, selector)) {
       var candidates = Array.prototype.filter.call(parent.childNodes, function (child) {
         return (
-          child.nodeType === Node.ELEMENT_NODE &&
+          (
+            child.nodeType === Node.ELEMENT_NODE ||
+            child.nodeType === Node.TEXT_NODE
+          ) &&
           containsWith(child, selector)
         );
       });
@@ -38,7 +46,10 @@ var Q = function() {
   var findLatestElements = function (current, selector) {
     var parent = current.parentElement;
     var bros = Array.prototype.filter.call(parent.childNodes, function (child) {
-      return (child.nodeType === Node.ELEMENT_NODE);
+      return (
+        child.nodeType === Node.ELEMENT_NODE ||
+        child.nodeType === Node.TEXT_NODE
+      );
     });
     var currentIndex = bros.indexOf(current);
     var candidates = bros.slice(currentIndex + 1).reduce(function (results, brother) {
