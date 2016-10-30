@@ -2,6 +2,7 @@ var Q = function() {
   var QElement = function (node) {
     var _typeElement = function (element, value) {
       element.value = value;
+      parent.dispatchEvent(new Event('change'));
     };
 
     var _clickElement = function (element) {
@@ -9,11 +10,16 @@ var Q = function() {
     };
 
     var _selectElement = function (element) {
+      var parent = element.parentElement;
       element.selected = true;
+      parent.dispatchEvent(new MouseEvent('click'));
+      parent.dispatchEvent(new Event('change'));
     };
 
     var _checkElement = function (element) {
       element.checked = true;
+      parent.dispatchEvent(new MouseEvent('click'));
+      parent.dispatchEvent(new Event('change'));
     };
 
     var self = this;
