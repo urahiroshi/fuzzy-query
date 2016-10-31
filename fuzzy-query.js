@@ -6,20 +6,33 @@ var Q = function() {
     };
 
     var _clickElement = function (element) {
-      element.click();
+      if ($) {
+        $(element).click();
+      } else {
+        element.click();
+      }
     };
 
     var _selectElement = function (element) {
       var parent = element.parentElement;
       element.selected = true;
-      parent.dispatchEvent(new MouseEvent('click'));
-      parent.dispatchEvent(new Event('change'));
+      if ($) {
+        $(parent).click();
+        $(parent).change();
+      } else {
+        parent.dispatchEvent(new MouseEvent('click'));
+        parent.dispatchEvent(new Event('change'));
+      }
     };
 
     var _checkElement = function (element) {
       element.checked = true;
       parent.dispatchEvent(new MouseEvent('click'));
-      parent.dispatchEvent(new Event('change'));
+      if ($) {
+        $(element).change();
+      } else {
+        parent.dispatchEvent(new Event('change'));
+      }
     };
 
     var self = this;
@@ -39,12 +52,17 @@ var Q = function() {
       _typeElement(targetElement, value);
     };
 
+    self.text = function () {
+      return self.element.textContent.trim();
+    };
+
     self.select = function (value) {
+      var children, i, max;
       if (value) {
         // Set RegExp value to select option in latest selectable element.
         var parentElement = findLatestByInputMethod(self.node, 'select');
-        var children = parentElement.childNodes;
-        for(var i = 0, max = children.length; i < max; i++) {
+        children = parentElement.childNodes;
+        for(i = 0, max = children.length; i < max; i++) {
           if (
             children[i].nodeType == Node.ELEMENT_NODE &&
             isTargetInput(children[i], ['option']) &&
@@ -56,7 +74,23 @@ var Q = function() {
         }
       } else {
         // Set no arguments to check this element.
-        _checkElement(self.element);
+        var isCheckable = function (element) {
+          return isTargetInput(element, [], ['radio', 'checkbox']);
+        };
+        if (isCheckable(self.element)) {
+          _checkElement(self.element);
+        } else {
+          children = self.element.childNodes;
+          for (i = 0, max = children.length; i < max; i++) {
+            if (
+              children[i].nodeType === Node.ELEMENT_NODE &&
+              isCheckable(children[i])
+            ) {
+              _checkElement(children[i])
+              return;
+            }
+          }
+        }
       }
     };
 
@@ -66,14 +100,14 @@ var Q = function() {
 
   var isCandidate = function (node) {
     return (
-      node.nodeType === Node.ELEMENT_NODE &&
-      (
-        // is visible element ?
-        node.offsetWidth > 0 ||
-        node.offsetHeight > 0 ||
-        node.getClientRects().length > 0
-      )
-    ) || (node.nodeType === Node.TEXT_NODE);
+        node.nodeType === Node.ELEMENT_NODE &&
+        (
+          // is visible element ?
+          node.offsetWidth > 0 ||
+          node.offsetHeight > 0 ||
+          node.getClientRects().length > 0
+        )
+      ) || (node.nodeType === Node.TEXT_NODE);
   };
 
   var innerText = function (element) {
@@ -231,24 +265,35 @@ var Q = function() {
   };
 
   var main = function (selectors) {
-    var nodes = selectors.reduce(function (candidates, selector) {
-      return candidates.reduce(function (results, candidate) {
-        if (candidate === root) {
-          return results.concat(findDeepsBySelector(candidate, selector));
+    // If target node is not node found by last selector,
+    // Set selector index to last argument.
+    var selectorIndex = selectors.length - 1;
+    if (String(selectors[selectorIndex]) !== selectors[selectorIndex]) {
+      selectorIndex = selectors.pop();
+    }
+    var results = selectors.reduce(function (candidates, selector) {
+      return candidates.reduce(function (nextCandidates, candidateNodes) {
+        if (candidateNodes === root) {
+          return nextCandidates.concat(findDeepsBySelector(candidateNodes, selector).map(function (node) {
+            return [node];
+          }));
         } else {
-          return results.concat(findLatestsBySelector(candidate, selector));
+          var previous = candidateNodes[candidateNodes.length - 1];
+          return nextCandidates.concat(findLatestsBySelector(previous, selector).map(function (node) {
+            return candidateNodes.concat([node]);
+          }));
         }
       }, []);
     }, [root]);
-    if (nodes.length > 0) {
-      return (new QElement(nodes[0]));
+    if (results.length > 0 && results[0].length > selectorIndex) {
+      return (new QElement(results[0][selectorIndex]));
     } else {
       return null;
     }
   };
-  // Allow one argument of array or many arguments of string. 
+  // Allow one argument of array or many arguments of string.
   if (Array.isArray(arguments[0])) {
-    return main(arguments[0]);  
+    return main(arguments[0]);
   } else {
     return main(Array.prototype.slice.call(arguments));
   }
