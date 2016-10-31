@@ -98,16 +98,27 @@ var Q = function() {
 
   var root = document.querySelector('body');
 
-  var isCandidate = function (node) {
+  var isVisibleElement = function (node) {
     return (
-        node.nodeType === Node.ELEMENT_NODE &&
-        (
-          // is visible element ?
-          node.offsetWidth > 0 ||
-          node.offsetHeight > 0 ||
-          node.getClientRects().length > 0
-        )
-      ) || (node.nodeType === Node.TEXT_NODE);
+      isElementNode(node) &&
+      (
+        node.offsetWidth > 0 ||
+        node.offsetHeight > 0 ||
+        node.getClientRects().length > 0
+      )
+    );
+  };
+
+  var isElementNode = function (node) {
+    return (node.nodeType === Node.ELEMENT_NODE);
+  };
+
+  var isTextNode = function (node) {
+    return (node.nodeType === Node.TEXT_NODE);
+  };
+
+  var isRegQueryCandidate = function (node) {
+    return (isVisibleElement(node) || isTextNode(node));
   };
 
   var innerText = function (element) {
@@ -115,11 +126,11 @@ var Q = function() {
   };
 
   var containsWith = function (element, selector) {
-    return (new RegExp(selector)).test(innerText(element));
+    return selector.test(innerText(element));
   };
 
   var matchWith = function (element, selector) {
-    return (new RegExp('^' + selector + '$')).test(innerText(element));
+    return (new RegExp('^' + selector.source + '$')).test(innerText(element));
   };
 
   var findDeep = function (parent, findMethod, filterMethod) {
@@ -157,7 +168,7 @@ var Q = function() {
   };
 
   // Find nodes having selector in later brothers of current node and ancestors of current node.
-  var findDeepsBySelector = function (parent, selector) {
+  var findDeepsByRegSelector = function (parent, selector) {
     return findDeeps(
       parent,
       // find method
@@ -167,7 +178,7 @@ var Q = function() {
       // filter method
       function (node) {
         return (
-          isCandidate(node) &&
+          isRegQueryCandidate(node) &&
           containsWith(node, selector)
         );
       }
@@ -196,7 +207,7 @@ var Q = function() {
 
   var findLatests = function (current, findMethod) {
     var parent = current.parentElement;
-    var bros = Array.prototype.filter.call(parent.childNodes, isCandidate);
+    var bros = Array.prototype.filter.call(parent.childNodes, isRegQueryCandidate);
     var currentIndex = bros.indexOf(current);
     var candidates = bros.slice(currentIndex + 1).reduce(function (results, brother) {
       return results.concat(findMethod(brother));
@@ -258,28 +269,60 @@ var Q = function() {
     });
   };
 
-  var findLatestsBySelector = function (current, selector) {
-    return findLatests(current, function(node) {
-      return findDeepsBySelector(node, selector);
+  var findLatestsByRegSelector = function (current, selector) {
+    return findLatests(current, function (node) {
+      return findDeepsByRegSelector(node, selector);
     });
   };
 
+  var querySelectorAll = function (parent, selector) {
+    return Array.prototype.filter.call(
+      parent.querySelectorAll(selector), function (element) {
+        return isVisibleElement(element);
+      }
+    );
+  };
+
+  var findLatestsByQuerySelector = function (current, selector) {
+    var candidates = querySelectorAll(root, selector);
+    return findLatests(current, function (node) {
+      return findDeeps(
+        node,
+        // find method
+        function (n) { return candidates.indexOf(n) >= 0; },
+        // filter method
+        function (n) { return isVisibleElement(n); }
+      );
+    });
+  };
+
+  var isRegExp = function (selector) {
+    return (typeof selector === 'object' && selector.toString()[0] === '/');
+  };
+
+  var isInteger = function (selector) {
+    return Math.round(selector) === selector;
+  };
+
   var main = function (selectors) {
-    // If target node is not node found by last selector,
+    // If target node is node which is not selected finally,
     // Set selector index to last argument.
     var selectorIndex = selectors.length - 1;
-    if (String(selectors[selectorIndex]) !== selectors[selectorIndex]) {
+    if (isInteger(selectors[selectorIndex])) {
       selectorIndex = selectors.pop();
     }
     var results = selectors.reduce(function (candidates, selector) {
       return candidates.reduce(function (nextCandidates, candidateNodes) {
+        var findMethod;
         if (candidateNodes === root) {
-          return nextCandidates.concat(findDeepsBySelector(candidateNodes, selector).map(function (node) {
+          findMethod = (isRegExp(selector)) ? findDeepsByRegSelector : querySelectorAll;
+          return nextCandidates.concat(findMethod(candidateNodes, selector).map(function (node) {
             return [node];
           }));
         } else {
+          findMethod = (isRegExp(selector)) ? findLatestsByRegSelector : findLatestsByQuerySelector;
           var previous = candidateNodes[candidateNodes.length - 1];
-          return nextCandidates.concat(findLatestsBySelector(previous, selector).map(function (node) {
+          return nextCandidates.concat(findMethod(previous, selector).map(function (node) {
             return candidateNodes.concat([node]);
           }));
         }
