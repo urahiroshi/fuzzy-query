@@ -153,9 +153,6 @@ var Q = function() {
   };
 
   var findDeep = function (parent, findMethod, filterMethod) {
-    if (findMethod(parent)) {
-      return parent;
-    }
     var candidates = Array.prototype.filter.call(parent.childNodes, function (child) {
       return filterMethod(child);
     });
@@ -163,6 +160,9 @@ var Q = function() {
     for (var i = 0, max = candidates.length; i < max; i++) {
       result = findDeep(candidates[i], findMethod, filterMethod);
       if (result) { return result; }
+    }
+    if (findMethod(parent)) {
+      return parent;
     }
     return null;
   };
