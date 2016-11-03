@@ -148,23 +148,21 @@ var Q = function() {
     return null;
   };
 
-  var findDeeps = function (parent, findMethod, filterMethod) {
+  var findDeeps = function (parent, findMethod, filterMethod, results) {
     var candidates = Array.prototype.filter.call(parent.childNodes, function (child) {
       return filterMethod(child);
     });
-    if (candidates.length === 0) {
-      // No candidates, parent is latest parent.
+    var results = candidates.reduce(function (results, candidate) {
+      return results.concat(findDeeps(candidate, findMethod, filterMethod));
+    }, []);
+    if (results.length === 0) {
       if (findMethod(parent)) {
         return [parent];
       } else {
         return [];
       }
-    } else {
-      // Any candidates, call me recursively.
-      return candidates.reduce(function (results, candidate) {
-        return results.concat(findDeeps(candidate, findMethod, filterMethod));
-      }, []);
     }
+    return results;
   };
 
   // Find nodes having selector in later brothers of current node and ancestors of current node.
