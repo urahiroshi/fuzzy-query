@@ -6,7 +6,7 @@ var Q = function() {
     };
 
     var _clickElement = function (element) {
-      if ($) {
+      if ($ && $(element)) {
         $(element).click();
       } else {
         element.click();
@@ -16,7 +16,7 @@ var Q = function() {
     var _selectElement = function (element) {
       var parent = element.parentElement;
       element.selected = true;
-      if ($) {
+      if ($ && $(parent)) {
         $(parent).click();
         $(parent).change();
       } else {
@@ -28,7 +28,7 @@ var Q = function() {
     var _checkElement = function (element) {
       element.checked = true;
       parent.dispatchEvent(new MouseEvent('click'));
-      if ($) {
+      if ($ && $(element)) {
         $(element).change();
       } else {
         parent.dispatchEvent(new Event('change'));
@@ -48,8 +48,16 @@ var Q = function() {
     };
 
     self.type = function (value) {
+      if (isTypable(self.element)) {
+        _typeElement(self.element, value);
+        return;
+      }
       var targetElement = findLatestByInputMethod(self.node, 'type');
-      _typeElement(targetElement, value);
+      if (targetElement) {
+        _typeElement(targetElement, value);
+      } else {
+        console.log('No typable element');
+      }
     };
 
     self.text = function () {
@@ -59,8 +67,17 @@ var Q = function() {
     self.select = function (value) {
       var children, i, max;
       if (value) {
-        // Set RegExp value to select option in latest selectable element.
-        var parentElement = findLatestByInputMethod(self.node, 'select');
+        // Set RegExp value to select option in current or latest selectable element.
+        var parentElement;
+        if (isSelectable(self.element)) {
+          parentElement = self.element;
+        } else {
+          parentElement = findLatestByInputMethod(self.node, 'select');
+        }
+        if (!parentElement) {
+          console.warn('No selectable element');
+          return;
+        }
         children = parentElement.childNodes;
         for(i = 0, max = children.length; i < max; i++) {
           if (
@@ -72,6 +89,7 @@ var Q = function() {
             return;
           }
         }
+        console.warn('No option selected');
       } else {
         // Set no arguments to check this element.
         var isCheckable = function (element) {
@@ -91,6 +109,7 @@ var Q = function() {
             }
           }
         }
+        console.warn('No checkable element');
       }
     };
 
@@ -230,29 +249,33 @@ var Q = function() {
     return (typeNames.indexOf(elemType) >= 0);
   };
 
+  var isTypable = function (node) {
+    return isElementNode(node) && isTargetInput(
+      node,
+      ['textarea'],
+      [
+        'text', 'password', 'search', 'tel', 'url', 'email', 'datetime',
+        'number'
+      ]
+    );
+  };
+
+  var isSelectable = function (node) {
+    return isElementNode(node) && isTargetInput(
+      node,
+      ['select', 'optgroup', 'datalist'],
+      []
+    );
+  };
+
   var findLatestByInputMethod = function (current, inputMethodName) {
     var findMethod;
     switch (inputMethodName) {
       case 'type':
-        findMethod = function (element) {
-          return isTargetInput(
-            element,
-            ['textarea'],
-            [
-              'text', 'password', 'search', 'tel', 'url', 'email', 'datetime',
-              'number'
-            ]
-          );
-        };
+        findMethod = isTypable;
         break;
       case 'select':
-        findMethod = function (element) {
-          return isTargetInput(
-            element,
-            ['select', 'optgroup', 'datalist'],
-            []
-          );
-        };
+        findMethod = isSelectable;
         break;
       default:
         break;
@@ -260,10 +283,8 @@ var Q = function() {
     if (!findMethod) {
       return null;
     }
-    return findLatest(current, function (node1) {
-      return findDeep(node1, findMethod, function (node2) {
-        return (node2.nodeType === Node.ELEMENT_NODE);
-      });
+    return findLatest(current, function (node) {
+      return findDeep(node, findMethod, isElementNode);
     });
   };
 
