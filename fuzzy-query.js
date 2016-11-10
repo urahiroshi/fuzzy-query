@@ -1,20 +1,28 @@
 var Q = function() {
   var QElement = function (node) {
+    var _isDisabled = function (element) {
+      return (element.getAttribute('disabled') != null);
+    }
     var _typeElement = function (element, value) {
+      if (_isDisabled(element)) { return null; }
       element.value = value;
       parent.dispatchEvent(new Event('change'));
+      return element;
     };
 
     var _clickElement = function (element) {
+      if (_isDisabled(element)) { return null; }
       if ($ && $(element)) {
         $(element).click();
       } else {
         element.click();
       }
+      return element;
     };
 
     var _selectElement = function (element) {
       var parent = element.parentElement;
+      if (_isDisabled(parent)) { return null; }
       element.selected = true;
       if ($ && $(parent)) {
         $(parent).click();
@@ -23,9 +31,11 @@ var Q = function() {
         parent.dispatchEvent(new MouseEvent('click'));
         parent.dispatchEvent(new Event('change'));
       }
+      return parent;
     };
 
     var _checkElement = function (element) {
+      if (_isDisabled(element)) { return null; }
       element.checked = true;
       parent.dispatchEvent(new MouseEvent('click'));
       if ($ && $(element)) {
@@ -33,6 +43,7 @@ var Q = function() {
       } else {
         parent.dispatchEvent(new Event('change'));
       }
+      return element;
     };
 
     var self = this;
@@ -44,7 +55,7 @@ var Q = function() {
     }
 
     self.click = function () {
-      _clickElement(self.element);
+      return _clickElement(self.element);
     };
 
     self.type = function (value) {
@@ -54,10 +65,11 @@ var Q = function() {
       }
       var targetElement = findLatestByInputMethod(self.node, 'type');
       if (targetElement) {
-        _typeElement(targetElement, value);
+        return _typeElement(targetElement, value);
       } else {
         console.log('No typable element');
       }
+      return null;
     };
 
     self.text = function () {
@@ -85,8 +97,7 @@ var Q = function() {
             isTargetInput(children[i], ['option']) &&
             matchWith(children[i], value)
           ) {
-            _selectElement(children[i]);
-            return;
+            return _selectElement(children[i]);
           }
         }
         console.warn('No option selected');
@@ -104,13 +115,13 @@ var Q = function() {
               children[i].nodeType === Node.ELEMENT_NODE &&
               isCheckable(children[i])
             ) {
-              _checkElement(children[i])
-              return;
+              return _checkElement(children[i])
             }
           }
         }
         console.warn('No checkable element');
       }
+      return null;
     };
 
   };
