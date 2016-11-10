@@ -1,5 +1,50 @@
 var Q = function() {
+  // search root
+  var root = document.querySelector('body');
+
+  // Result Class by fuzzy-query
   var QElement = function (node) {
+    // ---- private methods ----
+
+    var isTypable = function (node) {
+      return isElementNode(node) && isTargetInput(
+        node,
+        ['textarea'],
+        [
+          'text', 'password', 'search', 'tel', 'url', 'email', 'datetime',
+          'number'
+        ]
+      );
+    };
+
+    var isSelectable = function (node) {
+      return isElementNode(node) && isTargetInput(
+        node,
+        ['select', 'optgroup', 'datalist'],
+        []
+      );
+    };
+
+    var findLatestByInputMethod = function (current, inputMethodName) {
+      var findMethod;
+      switch (inputMethodName) {
+        case 'type':
+          findMethod = isTypable;
+          break;
+        case 'select':
+          findMethod = isSelectable;
+          break;
+        default:
+          break;
+      }
+      if (!findMethod) {
+        return null;
+      }
+      return findLatest(current, function (node) {
+        return findDeep(node, findMethod, isElementNode);
+      });
+    };
+
     var _isDisabled = function (element) {
       return (element.getAttribute('disabled') != null);
     }
@@ -47,6 +92,11 @@ var Q = function() {
     };
 
     var self = this;
+
+    // ---- public methods & members ----
+
+    // node: found Node by fuzzy-query
+    // element: found Element (node's parent or itself)
     self.node = node;
     if (node.nodeType === Node.ELEMENT_NODE) {
       self.element = node;
@@ -54,10 +104,12 @@ var Q = function() {
       self.element = node.parentElement;
     }
 
+    // click(): click element
     self.click = function () {
       return _clickElement(self.element);
     };
 
+    // type(value): type element by String value
     self.type = function (value) {
       if (isTypable(self.element)) {
         _typeElement(self.element, value);
@@ -72,10 +124,12 @@ var Q = function() {
       return null;
     };
 
+    // text(): get text content of element
     self.text = function () {
       return self.element.textContent.trim();
     };
 
+    // select(value): select element by RegExp value
     self.select = function (value) {
       var children, i, max;
       if (value) {
@@ -126,7 +180,7 @@ var Q = function() {
 
   };
 
-  var root = document.querySelector('body');
+  // ---- helper methods for fuzzy-query ----
 
   var isVisibleElement = function (node) {
     return (
@@ -163,167 +217,12 @@ var Q = function() {
     return (new RegExp('^' + selector.source + '$')).test(innerText(element));
   };
 
-  var findDeep = function (parent, findMethod, filterMethod) {
-    var candidates = Array.prototype.filter.call(parent.childNodes, function (child) {
-      return filterMethod(child);
-    });
-    var result;
-    for (var i = 0, max = candidates.length; i < max; i++) {
-      result = findDeep(candidates[i], findMethod, filterMethod);
-      if (result) { return result; }
-    }
-    if (findMethod(parent)) {
-      return parent;
-    }
-    return null;
-  };
-
-  var findDeeps = function (parent, findMethod, filterMethod, results) {
-    var candidates = Array.prototype.filter.call(parent.childNodes, function (child) {
-      return filterMethod(child);
-    });
-    var results = candidates.reduce(function (results, candidate) {
-      return results.concat(findDeeps(candidate, findMethod, filterMethod));
-    }, []);
-    if (results.length === 0) {
-      if (findMethod(parent)) {
-        return [parent];
-      } else {
-        return [];
-      }
-    }
-    return results;
-  };
-
-  // Find nodes having selector in later brothers of current node and ancestors of current node.
-  var findDeepsByRegSelector = function (parent, selector) {
-    return findDeeps(
-      parent,
-      // find method
-      function (node) {
-        return matchWith(node, selector);
-      },
-      // filter method
-      function (node) {
-        return (
-          isRegQueryCandidate(node) &&
-          containsWith(node, selector)
-        );
-      }
-    );
-  };
-
-  var findLatest = function (current, findMethod) {
-    var parent = current.parentElement;
-    var bros = Array.prototype.filter.call(parent.childNodes, function (child) {
-      return (
-        child.nodeType === Node.ELEMENT_NODE ||
-        child.nodeType === Node.TEXT_NODE
-      );
-    });
-    var result;
-    for (var i = bros.indexOf(current) + 1, max = bros.length; i < max; i++) {
-      result = findMethod(bros[i]);
-      if (result) { return result; }
-    }
-    if (current.parentElement === root) {
-      return null;
-    } else {
-      return findLatest(current.parentElement, findMethod);
-    }
-  };
-
-  var findLatests = function (current, findMethod) {
-    var parent = current.parentElement;
-    var bros = Array.prototype.filter.call(parent.childNodes, isRegQueryCandidate);
-    var currentIndex = bros.indexOf(current);
-    var candidates = bros.slice(currentIndex + 1).reduce(function (results, brother) {
-      return results.concat(findMethod(brother));
-    }, []);
-    if (current.parentElement === root) {
-      return candidates;
-    } else {
-      return candidates.concat(findLatests(current.parentElement, findMethod));
-    }
-  };
-
-  // Check target input element by candidates of bagNames and typeNames.
-  var isTargetInput = function (element, tagNames, typeNames) {
-    var elemTag = element.tagName.toLowerCase();
-    var elemType;
-    if (elemTag === 'input') {
-      elemType = element.getAttribute('type').toLowerCase();
-    }
-    if (tagNames.indexOf(elemTag) >= 0) {
-      return true;
-    }
-    return (typeNames.indexOf(elemType) >= 0);
-  };
-
-  var isTypable = function (node) {
-    return isElementNode(node) && isTargetInput(
-      node,
-      ['textarea'],
-      [
-        'text', 'password', 'search', 'tel', 'url', 'email', 'datetime',
-        'number'
-      ]
-    );
-  };
-
-  var isSelectable = function (node) {
-    return isElementNode(node) && isTargetInput(
-      node,
-      ['select', 'optgroup', 'datalist'],
-      []
-    );
-  };
-
-  var findLatestByInputMethod = function (current, inputMethodName) {
-    var findMethod;
-    switch (inputMethodName) {
-      case 'type':
-        findMethod = isTypable;
-        break;
-      case 'select':
-        findMethod = isSelectable;
-        break;
-      default:
-        break;
-    }
-    if (!findMethod) {
-      return null;
-    }
-    return findLatest(current, function (node) {
-      return findDeep(node, findMethod, isElementNode);
-    });
-  };
-
-  var findLatestsByRegSelector = function (current, selector) {
-    return findLatests(current, function (node) {
-      return findDeepsByRegSelector(node, selector);
-    });
-  };
-
   var querySelectorAll = function (parent, selector) {
     return Array.prototype.filter.call(
       parent.querySelectorAll(selector), function (element) {
         return isVisibleElement(element);
       }
     );
-  };
-
-  var findLatestsByQuerySelector = function (current, selector) {
-    var candidates = querySelectorAll(root, selector);
-    return findLatests(current, function (node) {
-      return findDeeps(
-        node,
-        // find method
-        function (n) { return candidates.indexOf(n) >= 0; },
-        // filter method
-        function (n) { return isVisibleElement(n); }
-      );
-    });
   };
 
   var isRegExp = function (selector) {
@@ -334,6 +233,7 @@ var Q = function() {
     return Math.round(selector) === selector;
   };
 
+  // calculate physical distance of nodes
   var calculateDistance = function (nodes) {
     var getAxes = function (element) {
       var left = element.offsetLeft;
@@ -363,6 +263,138 @@ var Q = function() {
     return distance;
   };
 
+  // ---- search methods for fuzzy-query ----
+
+  // search children recursively.
+  // if elements which is ancestor-descendant relation found, select descendant.
+  // if elements which is not ancestor-descendant relation found, select earliest one.
+  var findDeep = function (parent, findMethod, filterMethod) {
+    var candidates = Array.prototype.filter.call(parent.childNodes, function (child) {
+      return filterMethod(child);
+    });
+    var result;
+    for (var i = 0, max = candidates.length; i < max; i++) {
+      result = findDeep(candidates[i], findMethod, filterMethod);
+      if (result) { return result; }
+    }
+    if (findMethod(parent)) {
+      return parent;
+    }
+    return null;
+  };
+
+  // search children recursively.
+  // if elements which is ancestor-descendant relation found, select descendant.
+  // if elements which is not ancestor-descendant relation found, select all.
+  var findDeeps = function (parent, findMethod, filterMethod, results) {
+    var candidates = Array.prototype.filter.call(parent.childNodes, function (child) {
+      return filterMethod(child);
+    });
+    var results = candidates.reduce(function (results, candidate) {
+      return results.concat(findDeeps(candidate, findMethod, filterMethod));
+    }, []);
+    if (results.length === 0) {
+      if (findMethod(parent)) {
+        return [parent];
+      } else {
+        return [];
+      }
+    }
+    return results;
+  };
+
+  // search descendant nodes by RegExp selector
+  var findDeepsByRegSelector = function (parent, selector) {
+    return findDeeps(
+      parent,
+      // find method
+      function (node) {
+        return matchWith(node, selector);
+      },
+      // filter method
+      function (node) {
+        return (
+          isRegQueryCandidate(node) &&
+          containsWith(node, selector)
+        );
+      }
+    );
+  };
+
+  // search later brothers or later brothers of ancestors.
+  // if plural elements found, select earliest one.
+  var findLatest = function (current, findMethod) {
+    var parent = current.parentElement;
+    var bros = Array.prototype.filter.call(parent.childNodes, function (child) {
+      return (
+        child.nodeType === Node.ELEMENT_NODE ||
+        child.nodeType === Node.TEXT_NODE
+      );
+    });
+    var result;
+    for (var i = bros.indexOf(current) + 1, max = bros.length; i < max; i++) {
+      result = findMethod(bros[i]);
+      if (result) { return result; }
+    }
+    if (current.parentElement === root) {
+      return null;
+    } else {
+      return findLatest(current.parentElement, findMethod);
+    }
+  };
+
+  // search later brothers or later brothers of ancestors.
+  // if plural elements found, select all.
+  var findLatests = function (current, findMethod) {
+    var parent = current.parentElement;
+    var bros = Array.prototype.filter.call(parent.childNodes, isRegQueryCandidate);
+    var currentIndex = bros.indexOf(current);
+    var candidates = bros.slice(currentIndex + 1).reduce(function (results, brother) {
+      return results.concat(findMethod(brother));
+    }, []);
+    if (current.parentElement === root) {
+      return candidates;
+    } else {
+      return candidates.concat(findLatests(current.parentElement, findMethod));
+    }
+  };
+
+  // check target input element by candidates of bagNames and typeNames.
+  var isTargetInput = function (element, tagNames, typeNames) {
+    var elemTag = element.tagName.toLowerCase();
+    var elemType;
+    if (elemTag === 'input') {
+      elemType = element.getAttribute('type').toLowerCase();
+    }
+    if (tagNames.indexOf(elemTag) >= 0) {
+      return true;
+    }
+    return (typeNames.indexOf(elemType) >= 0);
+  };
+
+  // search later nodes by RegExp selector
+  var findLatestsByRegSelector = function (current, selector) {
+    return findLatests(current, function (node) {
+      return findDeepsByRegSelector(node, selector);
+    });
+  };
+
+  // search later nodes by query(String) selector
+  var findLatestsByQuerySelector = function (current, selector) {
+    var candidates = querySelectorAll(root, selector);
+    return findLatests(current, function (node) {
+      return findDeeps(
+        node,
+        // find method
+        function (n) { return candidates.indexOf(n) >= 0; },
+        // filter method
+        function (n) { return isVisibleElement(n); }
+      );
+    });
+  };
+
+  // ---- fuzzy-query main methods ----
+
   var main = function (selectors) {
     // If target node is node which is not selected finally,
     // Set selector index to last argument.
@@ -371,6 +403,7 @@ var Q = function() {
     if (isInteger(selectors[selectorIndex])) {
       selectorIndex = selectors.pop();
     }
+    // pare down the candidates by selectors
     results = selectors.reduce(function (candidates, selector) {
       return candidates.reduce(function (nextCandidates, candidateNodes) {
         var findMethod;
@@ -388,7 +421,7 @@ var Q = function() {
         }
       }, []);
     }, [root]);
-    // select nearest nodes (result)  by results
+    // if multiple results found, select nearest one.
     results.reduce(function(minDistance, nodes) {
       var distance;
       if (nodes.length > selectorIndex) {
