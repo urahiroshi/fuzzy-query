@@ -323,14 +323,44 @@ var Q = function() {
     return Math.round(selector) === selector;
   };
 
+  var calculateDistance = function (nodes) {
+    var getAxes = function (element) {
+      var left = element.offsetLeft;
+      var top = element.offsetTop;
+      var current = element;
+      while(current.offsetParent) {
+        left += current.offsetParent.offsetLeft;
+        top += current.offsetParent.offsetTop;
+        current = current.offsetParent;
+      }
+      return [left, top];
+    };
+    var elements = nodes.map(function (node) {
+      return (node.nodeType === Node.ELEMENT_NODE) ? node : node.parentElement;
+    });
+    var distance = 0;
+    elements.reduce(function (preAxes, current) {
+      var currentAxes = getAxes(current);
+      if (preAxes) {
+        distance += Math.sqrt(
+          Math.pow(currentAxes[0] - preAxes[0], 2) +
+          Math.pow(currentAxes[1] - preAxes[1], 2)
+        );
+      }
+      return currentAxes;
+    }, null);
+    return distance;
+  };
+
   var main = function (selectors) {
     // If target node is node which is not selected finally,
     // Set selector index to last argument.
     var selectorIndex = selectors.length - 1;
+    var result, results;
     if (isInteger(selectors[selectorIndex])) {
       selectorIndex = selectors.pop();
     }
-    var results = selectors.reduce(function (candidates, selector) {
+    results = selectors.reduce(function (candidates, selector) {
       return candidates.reduce(function (nextCandidates, candidateNodes) {
         var findMethod;
         if (candidateNodes === root) {
@@ -347,11 +377,22 @@ var Q = function() {
         }
       }, []);
     }, [root]);
-    if (results.length > 0 && results[0].length > selectorIndex) {
-      return (new QElement(results[0][selectorIndex]));
-    } else {
-      return null;
+    // select nearest nodes (result)  by results
+    results.reduce(function(minDistance, nodes) {
+      var distance;
+      if (nodes.length > selectorIndex) {
+        distance = calculateDistance(nodes);
+        if (distance < minDistance) {
+          result = nodes;
+          return distance;
+        }
+      }
+      return minDistance;
+    }, Number.MAX_VALUE);
+    if (result) {
+      return (new QElement(result[selectorIndex]));
     }
+    return null;
   };
   // Allow one argument of array or many arguments of string.
   if (Array.isArray(arguments[0])) {
