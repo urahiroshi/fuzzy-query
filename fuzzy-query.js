@@ -47,7 +47,8 @@ var Q = function() {
 
     var _isDisabled = function (element) {
       return (element.getAttribute('disabled') != null);
-    }
+    };
+
     var _typeElement = function (element, value) {
       if (_isDisabled(element)) { return null; }
       element.value = value;
