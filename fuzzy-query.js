@@ -236,36 +236,6 @@ var Q = function() {
     return Math.round(selector) === selector;
   };
 
-  // calculate physical distance of nodes
-  var calculateDistance = function (nodes) {
-    var getAxes = function (element) {
-      var left = element.offsetLeft;
-      var top = element.offsetTop;
-      var current = element;
-      while(current.offsetParent) {
-        left += current.offsetParent.offsetLeft;
-        top += current.offsetParent.offsetTop;
-        current = current.offsetParent;
-      }
-      return [left, top];
-    };
-    var elements = nodes.map(function (node) {
-      return (node.nodeType === Node.ELEMENT_NODE) ? node : node.parentElement;
-    });
-    var distance = 0;
-    elements.reduce(function (preAxes, current) {
-      var currentAxes = getAxes(current);
-      if (preAxes) {
-        distance += Math.sqrt(
-          Math.pow(currentAxes[0] - preAxes[0], 2) +
-          Math.pow(currentAxes[1] - preAxes[1], 2)
-        );
-      }
-      return currentAxes;
-    }, null);
-    return distance;
-  };
-
   // ---- search methods for fuzzy-query ----
 
   // search children recursively.
@@ -289,7 +259,8 @@ var Q = function() {
   // search children recursively.
   // if elements which is ancestor-descendant relation found, select descendant.
   // if elements which is not ancestor-descendant relation found, select all.
-  var findDeeps = function (parent, findMethod, filterMethod, results) {
+  var findDeeps = function (parent, findMethod, filterMethod, results, index) {
+    index = index || 0;
     var candidates = Array.prototype.filter.call(parent.childNodes, function (child) {
       return filterMethod(child);
     });
@@ -396,6 +367,40 @@ var Q = function() {
     });
   };
 
+  // ---- helper method fof main method ----
+
+  // if first node is many (and second node exists), select last one.
+  var selectLastFirstNode = function (nodesList) {
+    var secondNodes = [];
+    var secondNode;
+    var reversedList = nodesList.slice();
+    reversedList.reverse();
+    reversedList = reversedList.filter(function (nodes, index) {
+      secondNode = nodes[1];
+      if (secondNodes.indexOf(secondNode) < 0) {
+        secondNodes.push(secondNode);
+        return true;
+      }
+      return false;
+    });
+    reversedList.reverse();
+    return reversedList;
+  };
+
+  // if last node is many (and booby node exists), select first one.
+  var selectFirstLastNode = function (nodesList) {
+    var boobyNodes = [];
+    var boobyNode;
+    return nodesList.filter(function (nodes, index) {
+      boobyNode = nodes[nodes.length - 2];
+      if (boobyNodes.indexOf(boobyNode) < 0) {
+        boobyNodes.push(boobyNode);
+        return true;
+      }
+      return false;
+    });
+  }
+
   // ---- fuzzy-query main methods ----
 
   var main = function (selectors) {
@@ -424,20 +429,14 @@ var Q = function() {
         }
       }, []);
     }, [root]);
-    // if multiple results found, select nearest one.
-    results.reduce(function(minDistance, nodes) {
-      var distance;
-      if (nodes.length > selectorIndex) {
-        distance = calculateDistance(nodes);
-        if (distance < minDistance) {
-          result = nodes;
-          return distance;
-        }
-      }
-      return minDistance;
-    }, Number.MAX_VALUE);
-    if (result) {
-      return (new QElement(result[selectorIndex]));
+
+    // if multiple results found, filter one.
+    if (selectors.length > 1 && results.length > 1) {
+      results = selectLastFirstNode(results);
+      results = selectFirstLastNode(results);
+    }
+    if (results[0] && results[0][selectorIndex]) {
+      return (new QElement(results[0][selectorIndex]));
     }
     return null;
   };
