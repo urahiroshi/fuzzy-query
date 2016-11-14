@@ -135,7 +135,9 @@ var Q = function() {
       var children, i, max;
       if (value) {
         // Set RegExp value to select option in current or latest selectable element.
+        // (if set string value, convert regexp value for convenience)
         var parentElement;
+        var regValue = (typeof value === 'string') ? new RegExp(value) : value;
         if (isSelectable(self.element)) {
           parentElement = self.element;
         } else {
@@ -150,7 +152,7 @@ var Q = function() {
           if (
             children[i].nodeType == Node.ELEMENT_NODE &&
             isTargetInput(children[i], ['option']) &&
-            matchWith(children[i], value)
+            matchWith(children[i], regValue)
           ) {
             return _selectElement(children[i]);
           }
