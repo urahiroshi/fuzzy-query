@@ -8,21 +8,21 @@ var Q = function() {
 
     var isTypable = function (node) {
       return isElementNode(node) && isTargetInput(
-        node,
-        ['textarea'],
-        [
-          'text', 'password', 'search', 'tel', 'url', 'email', 'datetime',
-          'number'
-        ]
-      );
+          node,
+          ['textarea'],
+          [
+            'text', 'password', 'search', 'tel', 'url', 'email', 'datetime',
+            'number'
+          ]
+        );
     };
 
     var isSelectable = function (node) {
       return isElementNode(node) && isTargetInput(
-        node,
-        ['select', 'optgroup', 'datalist'],
-        []
-      );
+          node,
+          ['select', 'optgroup', 'datalist'],
+          []
+        );
     };
 
     var findLatestByInputMethod = function (current, inputMethodName) {
@@ -371,35 +371,28 @@ var Q = function() {
 
   // if first node is many (and second node exists), select last one.
   var selectLastFirstNode = function (nodesList) {
-    var secondNodes = [];
-    var secondNode;
+    var validPairs = [];
+    var firstNode, secondNode;
     var reversedList = nodesList.slice();
     reversedList.reverse();
-    reversedList = reversedList.filter(function (nodes, index) {
+    reversedList = reversedList.filter(function (nodes) {
+      var pairIndex;
+      firstNode = nodes[0];
       secondNode = nodes[1];
-      if (secondNodes.indexOf(secondNode) < 0) {
-        secondNodes.push(secondNode);
-        return true;
+      pairIndex = validPairs.map(function (nodes) {return nodes.secondNode;}).indexOf(secondNode);
+      if (pairIndex < 0) {
+        validPairs.push({
+          secondNode: secondNode,
+          firstNode: firstNode
+        });
+      } else if (validPairs[pairIndex].firstNode !== firstNode) {
+        return false;
       }
-      return false;
+      return true;
     });
     reversedList.reverse();
     return reversedList;
   };
-
-  // if last node is many (and booby node exists), select first one.
-  var selectFirstLastNode = function (nodesList) {
-    var boobyNodes = [];
-    var boobyNode;
-    return nodesList.filter(function (nodes, index) {
-      boobyNode = nodes[nodes.length - 2];
-      if (boobyNodes.indexOf(boobyNode) < 0) {
-        boobyNodes.push(boobyNode);
-        return true;
-      }
-      return false;
-    });
-  }
 
   // ---- fuzzy-query main methods ----
 
@@ -407,7 +400,7 @@ var Q = function() {
     // If target node is node which is not selected finally,
     // Set selector index to last argument.
     var selectorIndex = selectors.length - 1;
-    var result, results;
+    var results;
     if (isInteger(selectors[selectorIndex])) {
       selectorIndex = selectors.pop();
     }
@@ -430,10 +423,9 @@ var Q = function() {
       }, []);
     }, [root]);
 
-    // if multiple results found, filter one.
+    // if multiple results found, select one.
     if (selectors.length > 1 && results.length > 1) {
       results = selectLastFirstNode(results);
-      results = selectFirstLastNode(results);
     }
     if (results[0] && results[0][selectorIndex]) {
       return (new QElement(results[0][selectorIndex]));
