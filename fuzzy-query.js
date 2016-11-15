@@ -447,3 +447,7 @@ var Q = function() {
     return main(Array.prototype.slice.call(arguments));
   }
 };
+
+if (!window) {
+  module.exports = Q;
+}
