@@ -1,0 +1,19 @@
+{
+  "name": "fuzzy-query",
+  "version": "0.1.0",
+  "description": "Intuitive query to select HTML element and operate input action.",
+  "main": "fuzzy-query.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/urahiroshi/fuzzy-query.git"
+  },
+  "author": "urahiroshi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/urahiroshi/fuzzy-query/issues"
+  },
+  "homepage": "https://github.com/urahiroshi/fuzzy-query#readme"
+}
