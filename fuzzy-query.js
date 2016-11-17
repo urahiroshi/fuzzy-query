@@ -440,6 +440,6 @@ var Q = function() {
   }
 };
 
-if (!window) {
+if (typeof window === 'undefined') {
   module.exports = Q;
 }
