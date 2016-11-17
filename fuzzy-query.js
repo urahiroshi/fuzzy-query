@@ -164,7 +164,7 @@ var Q = function() {
           return isTargetInput(element, [], ['radio', 'checkbox']);
         };
         if (isCheckable(self.element)) {
-          _checkElement(self.element);
+          return _checkElement(self.element);
         } else {
           children = self.element.childNodes;
           for (i = 0, max = children.length; i < max; i++) {
