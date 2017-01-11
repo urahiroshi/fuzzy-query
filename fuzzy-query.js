@@ -338,12 +338,17 @@ var Q = function() {
     var elemTag = element.tagName.toLowerCase();
     var elemType;
     if (elemTag === 'input') {
-      elemType = element.getAttribute('type').toLowerCase();
+      elemType = element.getAttribute('type');
+      if (elemType) {
+        elemType = elemType.toLowerCase();
+      } else {
+        elemType = 'text';
+      }
     }
     if (tagNames.indexOf(elemTag) >= 0) {
       return true;
     }
-    return (typeNames.indexOf(elemType) >= 0);
+    return (elemType && typeNames.indexOf(elemType) >= 0);
   };
 
   // search later nodes by RegExp selector
