@@ -113,8 +113,7 @@ var Q = function() {
     // type(value): type element by String value
     self.type = function (value) {
       if (isTypable(self.element)) {
-        _typeElement(self.element, value);
-        return;
+        return _typeElement(self.element, value);
       }
       var targetElement = findLatestByInputMethod(self.node, 'type');
       if (targetElement) {
