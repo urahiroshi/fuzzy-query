@@ -56,9 +56,14 @@ var Q = function() {
       return element;
     };
 
+    var _useJQuery = function () {
+      if (typeof $ === 'undefined') { return false; }
+      return !!($ && $.fn && $.fn.jquery);
+    }
+
     var _clickElement = function (element) {
       if (_isDisabled(element)) { return null; }
-      if ($ && $(element)) {
+      if (_useJQuery()) {
         $(element).click();
       } else {
         element.click();
@@ -70,7 +75,7 @@ var Q = function() {
       var parent = element.parentElement;
       if (_isDisabled(parent)) { return null; }
       element.selected = true;
-      if ($ && $(parent)) {
+      if (_useJQuery()) {
         $(parent).click();
         $(parent).change();
       } else {
@@ -84,7 +89,7 @@ var Q = function() {
       if (_isDisabled(element)) { return null; }
       element.checked = true;
       parent.dispatchEvent(new MouseEvent('click'));
-      if ($ && $(element)) {
+      if (_useJQuery()) {
         $(element).change();
       } else {
         parent.dispatchEvent(new Event('change'));
