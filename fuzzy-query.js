@@ -49,51 +49,37 @@ var Q = function() {
       return (element.getAttribute('disabled') != null);
     };
 
+    var _dispatchEvent = function (element, type) {
+      var event = document.createEvent('HTMLEvents');
+      event.initEvent(type, true, true);
+      element.dispatchEvent(event);
+    }
+    
     var _typeElement = function (element, value) {
       if (_isDisabled(element)) { return null; }
       element.value = value;
-      parent.dispatchEvent(new Event('change'));
+      _dispatchEvent(element, 'change');
       return element;
     };
 
-    var _useJQuery = function () {
-      if (typeof $ === 'undefined') { return false; }
-      return !!($ && $.fn && $.fn.jquery);
-    }
-
     var _clickElement = function (element) {
       if (_isDisabled(element)) { return null; }
-      if (_useJQuery()) {
-        $(element).click();
-      } else {
-        element.click();
-      }
+      _dispatchEvent(element, 'click');
       return element;
     };
 
     var _selectElement = function (element) {
       var parent = element.parentElement;
       if (_isDisabled(parent)) { return null; }
-      element.selected = true;
-      if (_useJQuery()) {
-        $(parent).click();
-        $(parent).change();
-      } else {
-        parent.dispatchEvent(new MouseEvent('click'));
-        parent.dispatchEvent(new Event('change'));
-      }
+      parent.value = element.value;
+      _dispatchEvent(parent, 'change');
       return parent;
     };
 
     var _checkElement = function (element) {
       if (_isDisabled(element)) { return null; }
       element.checked = true;
-      parent.dispatchEvent(new MouseEvent('click'));
-      if (_useJQuery()) {
-        $(element).change();
-      } else {
-        parent.dispatchEvent(new Event('change'));
-      }
+      _dispatchEvent(element, 'change');
       return element;
     };
 
@@ -208,7 +194,7 @@ var Q = function() {
     return (node.nodeType === Node.TEXT_NODE);
   };
 
-  var isRegQueryCandidate = function (node) {
+  var isVisibleNode = function (node) {
     return (isVisibleElement(node) || isTextNode(node));
   };
 
@@ -292,7 +278,7 @@ var Q = function() {
       // filter method
       function (node) {
         return (
-          isRegQueryCandidate(node) &&
+          isVisibleNode(node) &&
           containsWith(node, selector)
         );
       }
@@ -322,12 +308,20 @@ var Q = function() {
   };
 
   // search later brothers or later brothers of ancestors.
-  // if plural elements found, select all.
-  var findLatests = function (current, findMethod) {
-    var parent = current.parentElement;
-    var bros = Array.prototype.filter.call(parent.childNodes, isRegQueryCandidate);
-    var currentIndex = bros.indexOf(current);
-    var candidates = bros.slice(currentIndex + 1).reduce(function (results, brother) {
+  // if containsCurrentChildren=true, search own children.
+  // return all nodes which is visibled and matched by findMethod
+  var findLatests = function (current, findMethod, containsCurrentChildren) {
+    var parent, bros, currentIndex, candidates;
+    containsCurrentChildren = containsCurrentChildren || false;
+    if (containsCurrentChildren && current.childNodes) {
+      candidates = Array.prototype.filter.call(current.childNodes, isVisibleNode);
+    } else {
+      parent = current.parentElement;
+      bros = Array.prototype.filter.call(parent.childNodes, isVisibleNode);
+      currentIndex = bros.indexOf(current);
+      candidates = bros.slice(currentIndex + 1);
+    }
+    candidates = candidates.reduce(function (results, brother) {
       return results.concat(findMethod(brother));
     }, []);
     if (current.parentElement === root) {
@@ -359,7 +353,7 @@ var Q = function() {
   var findLatestsByRegSelector = function (current, selector) {
     return findLatests(current, function (node) {
       return findDeepsByRegSelector(node, selector);
-    });
+    }, true);
   };
 
   // search later nodes by query(String) selector
@@ -373,7 +367,7 @@ var Q = function() {
         // filter method
         function (n) { return isVisibleElement(n); }
       );
-    });
+    }, true);
   };
 
   // ---- helper method fof main method ----
