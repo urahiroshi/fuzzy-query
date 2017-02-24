@@ -49,51 +49,37 @@ var Q = function() {
       return (element.getAttribute('disabled') != null);
     };
 
+    var _dispatchEvent = function (element, type) {
+      var event = document.createEvent('HTMLEvents');
+      event.initEvent(type, true, true);
+      element.dispatchEvent(event);
+    }
+    
     var _typeElement = function (element, value) {
       if (_isDisabled(element)) { return null; }
       element.value = value;
-      parent.dispatchEvent(new Event('change'));
+      _dispatchEvent(element, 'change');
       return element;
     };
 
-    var _useJQuery = function () {
-      if (typeof $ === 'undefined') { return false; }
-      return !!($ && $.fn && $.fn.jquery);
-    }
-
     var _clickElement = function (element) {
       if (_isDisabled(element)) { return null; }
-      if (_useJQuery()) {
-        $(element).click();
-      } else {
-        element.click();
-      }
+      _dispatchEvent(element, 'click');
       return element;
     };
 
     var _selectElement = function (element) {
       var parent = element.parentElement;
       if (_isDisabled(parent)) { return null; }
-      element.selected = true;
-      if (_useJQuery()) {
-        $(parent).click();
-        $(parent).change();
-      } else {
-        parent.dispatchEvent(new MouseEvent('click'));
-        parent.dispatchEvent(new Event('change'));
-      }
+      parent.value = element.value;
+      _dispatchEvent(parent, 'change');
       return parent;
     };
 
     var _checkElement = function (element) {
       if (_isDisabled(element)) { return null; }
       element.checked = true;
-      parent.dispatchEvent(new MouseEvent('click'));
-      if (_useJQuery()) {
-        $(element).change();
-      } else {
-        parent.dispatchEvent(new Event('change'));
-      }
+      _dispatchEvent(element, 'change');
       return element;
     };
 
