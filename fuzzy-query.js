@@ -315,6 +315,7 @@ var Q = function() {
     containsCurrentChildren = containsCurrentChildren || false;
     if (containsCurrentChildren && current.childNodes) {
       candidates = Array.prototype.filter.call(current.childNodes, isVisibleNode);
+      parent = current;
     } else {
       parent = current.parentElement;
       bros = Array.prototype.filter.call(parent.childNodes, isVisibleNode);
@@ -324,10 +325,10 @@ var Q = function() {
     candidates = candidates.reduce(function (results, brother) {
       return results.concat(findMethod(brother));
     }, []);
-    if (current.parentElement === root) {
+    if (parent === root) {
       return candidates;
     } else {
-      return candidates.concat(findLatests(current.parentElement, findMethod));
+      return candidates.concat(findLatests(parent, findMethod));
     }
   };
 
