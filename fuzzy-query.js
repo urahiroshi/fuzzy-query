@@ -208,7 +208,7 @@ var Q = function() {
     return (node.nodeType === Node.TEXT_NODE);
   };
 
-  var isRegQueryCandidate = function (node) {
+  var isVisibleNode = function (node) {
     return (isVisibleElement(node) || isTextNode(node));
   };
 
@@ -292,7 +292,7 @@ var Q = function() {
       // filter method
       function (node) {
         return (
-          isRegQueryCandidate(node) &&
+          isVisibleNode(node) &&
           containsWith(node, selector)
         );
       }
@@ -322,12 +322,20 @@ var Q = function() {
   };
 
   // search later brothers or later brothers of ancestors.
-  // if plural elements found, select all.
-  var findLatests = function (current, findMethod) {
-    var parent = current.parentElement;
-    var bros = Array.prototype.filter.call(parent.childNodes, isRegQueryCandidate);
-    var currentIndex = bros.indexOf(current);
-    var candidates = bros.slice(currentIndex + 1).reduce(function (results, brother) {
+  // if containsCurrentChildren=true, search own children.
+  // return all nodes which is visibled and matched by findMethod
+  var findLatests = function (current, findMethod, containsCurrentChildren) {
+    var parent, bros, currentIndex, candidates;
+    containsCurrentChildren = containsCurrentChildren || false;
+    if (containsCurrentChildren && current.childNodes) {
+      candidates = Array.prototype.filter.call(current.childNodes, isVisibleNode);
+    } else {
+      parent = current.parentElement;
+      bros = Array.prototype.filter.call(parent.childNodes, isVisibleNode);
+      currentIndex = bros.indexOf(current);
+      candidates = bros.slice(currentIndex + 1);
+    }
+    candidates = candidates.reduce(function (results, brother) {
       return results.concat(findMethod(brother));
     }, []);
     if (current.parentElement === root) {
@@ -359,7 +367,7 @@ var Q = function() {
   var findLatestsByRegSelector = function (current, selector) {
     return findLatests(current, function (node) {
       return findDeepsByRegSelector(node, selector);
-    });
+    }, true);
   };
 
   // search later nodes by query(String) selector
@@ -373,7 +381,7 @@ var Q = function() {
         // filter method
         function (n) { return isVisibleElement(n); }
       );
-    });
+    }, true);
   };
 
   // ---- helper method fof main method ----
