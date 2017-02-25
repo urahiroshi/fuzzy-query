@@ -15,5 +15,11 @@
   "bugs": {
     "url": "https://github.com/urahiroshi/fuzzy-query/issues"
   },
-  "homepage": "https://github.com/urahiroshi/fuzzy-query#readme"
+  "devDependencies": {
+    "jasmine-core": "^2.5.2",
+    "karma": "^1.5.0",
+    "karma-chrome-launcher": "^2.0.0",
+    "karma-html2js-preprocessor": "^1.1.0",
+    "karma-jasmine": "^1.1.0"
+  }
 }
