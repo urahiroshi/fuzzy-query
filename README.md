@@ -61,6 +61,39 @@ fuzzy-query
   </script>
   ```
 
+- table selector
+
+  ```html
+  <table>
+    <thead>
+      <tr>
+        <th>head1</th>
+        <th>head2</th>
+        <th>head3</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>value1</td>
+        <!-- click me! -->
+        <td>value2: <input id="ex-table-selector" /></td>
+        <td><div>value3</div></td>
+      </tr>
+      <tr>
+        <td>value4</td>
+        <td>value2: <input /></td>
+        <td><div>value3</div></td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <script>
+  Q({col: /head2/, row: /value1/}, 'input').click();
+  // row can also be index number
+  Q({col: /head2/, row: 1}, 'input').click();
+  </script>
+  ```
+
 #### Selecting Priority
 
 - In first selector, last element takes a priority.

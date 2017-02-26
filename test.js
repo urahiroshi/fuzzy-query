@@ -26,4 +26,17 @@ describe('template', function() {
   it('should select first element in not first selector', function () {
     expect(Q(/guava/, 'button').element.id === 'ex-other-selector-first-element');
   })
+
+  it('should select children of element selected by previous selector', function () {
+    expect(Q('.fruits-1', /melon/).element.id === 'ex-search-children');
+  })
+
+  it('should select by table selector', function () {
+    expect(Q({col: /head2/, row: /value1/}, 'input').element.id === 'ex-table-selector');
+  })
+
+  it('should select by table selector with row index', function () {
+    expect(Q({col: /head2/, row: 1}, 'input').element.id === 'ex-table-selector');
+  })
+
 })
