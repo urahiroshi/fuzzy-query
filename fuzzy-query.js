@@ -360,6 +360,7 @@ var Q = function() {
   // search later nodes by query(String) selector
   var findLatestsByQuerySelector = function (current, selector) {
     var candidates = querySelectorAll(root, selector);
+    if (root === current) { return candidates; }
     return findLatests(current, function (node) {
       return findDeeps(
         node,
@@ -369,6 +370,95 @@ var Q = function() {
         function (n) { return isVisibleElement(n); }
       );
     }, true);
+  };
+
+  var findByTableSelector = function (current, selector) {
+    var getParentWithTags = function (node, tags) {
+      if (node === root) { return null; }
+      var parent = node.parentElement;
+      if (tags.indexOf(parent.tagName.toLowerCase()) >= 0) {
+        return parent;
+      } else {
+        return getParentWithTags(parent, tags);
+      }
+    };
+    var getChildrenWithTags = function (parent, tags) {
+      return Array.prototype.filter.call(parent.childNodes, function (node) {
+        return (node.tagName && tags.indexOf(node.tagName.toLowerCase()) >= 0);
+      });
+    };
+
+    // selector.col need to be selector
+    var colCandidates = getFindMethodBySelector(selector.col)(current, selector.col);
+    var colTags = ['td', 'th'];
+    var rowTags = ['tr'];
+    var rowParentTags = ['tbody', 'thead'];
+    var tableTags = ['table'];
+    var colInfos = [];
+    colCandidates.forEach(function (candidate) {
+      var colElement = getParentWithTags(candidate, colTags);
+      if (colElement == null) { return; }
+      var rowElement = colElement.parentElement;
+      if (rowTags.indexOf(rowElement.tagName.toLowerCase()) < 0) { return; }
+      var bros = getChildrenWithTags(rowElement, colTags);
+      var table = getParentWithTags(rowElement, tableTags);
+      colInfos.push({index: bros.indexOf(colElement), row: rowElement, table: table});
+    });
+    
+    var candidateInfos = [];
+    // selector.row needs to be selector or row index number
+    if (typeof selector.row !== 'number') {
+      var rowFindMethod;
+      if (isRegExp(selector.row)) {
+        rowFindMethod = findDeepsByRegSelector;
+      } else {
+        rowFindMethod = querySelectorAll;
+      }
+      colInfos.forEach(function (colInfo) {
+        var rowCandidates = rowFindMethod(colInfo.table, selector.row).map(function (node) {
+          return getParentWithTags(node, rowTags);
+        }).filter(function (node) {
+          return (node != null);
+        });
+        candidateInfos = candidateInfos.concat(rowCandidates.map(function (rowCandidate) {
+          return {
+            row: rowCandidate,
+            colIndex: colInfo.index
+          };
+        }));
+      });
+    } else {
+      candidateInfos = colInfos.map(function (colInfo) {
+        var table = colInfo.table;
+        var tableRows = [];
+        Array.prototype.forEach.call(table.childNodes, function (node) {
+          if (!node.tagName) { return; }
+          if (rowTags.indexOf(node.tagName.toLowerCase()) >= 0) {
+            tableRows.push(node);
+          } else if (rowParentTags.indexOf(node.tagName.toLowerCase()) >= 0) {
+            tableRows = tableRows.concat(getChildrenWithTags(node, rowTags));
+          }
+        });
+        return {
+          row: tableRows[selector.row],
+          colIndex: colInfo.index
+        };
+      }).filter(function (candidateInfo) { return (candidateInfo.row != null); });
+    }
+    return candidateInfos.map(function (candidateInfo) {
+      var cells = getChildrenWithTags(candidateInfo.row, colTags);
+      return cells[candidateInfo.colIndex]
+    }).filter(function (cell) { return (cell != null); });
+  };
+
+  var getFindMethodBySelector = function (selector) {
+    if (isRegExp(selector)) {
+      return findLatestsByRegSelector;
+    } else if (selector.col != null && selector.row != null) {
+      return findByTableSelector;
+    } else {
+      return findLatestsByQuerySelector;
+    }
   };
 
   // ---- helper method fof main method ----
@@ -410,15 +500,13 @@ var Q = function() {
     }
     // pare down the candidates by selectors
     results = selectors.reduce(function (candidates, selector) {
+      var findMethod = getFindMethodBySelector(selector);
       return candidates.reduce(function (nextCandidates, candidateNodes) {
-        var findMethod;
         if (candidateNodes === root) {
-          findMethod = (isRegExp(selector)) ? findDeepsByRegSelector : querySelectorAll;
           return nextCandidates.concat(findMethod(candidateNodes, selector).map(function (node) {
             return [node];
           }));
         } else {
-          findMethod = (isRegExp(selector)) ? findLatestsByRegSelector : findLatestsByQuerySelector;
           var previous = candidateNodes[candidateNodes.length - 1];
           return nextCandidates.concat(findMethod(previous, selector).map(function (node) {
             return candidateNodes.concat([node]);
