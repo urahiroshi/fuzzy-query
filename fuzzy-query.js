@@ -375,7 +375,7 @@ var Q = function() {
   var findByTableSelector = function (current, selector) {
     // Get node's ancestor having tags
     // This method called recursively
-    var getParentWithTags = function (node, tags) {
+    var getAncestorWithTags = function (node, tags) {
       if (node === root) { return null; }
       var parent = node.parentElement;
       if (
@@ -384,7 +384,7 @@ var Q = function() {
       ) {
         return parent;
       } else {
-        return getParentWithTags(parent, tags);
+        return getAncestorWithTags(parent, tags);
       }
     };
     // Get node's children having tags
@@ -424,11 +424,11 @@ var Q = function() {
     //  But, it potentially doesn't need positions which are shown after target row.
     //  This may be optimized in the future )
     var colInfos = colCandidates.reduce(function (results, candidate) {
-      var colElement = getParentWithTags(candidate, colTags);
+      var colElement = getAncestorWithTags(candidate, colTags);
       if (colElement == null) { return results; }
       var rowElement = colElement.parentElement;
       if (rowTags.indexOf(rowElement.tagName.toLowerCase()) < 0) { return results; }
-      var table = getParentWithTags(rowElement, tableTags);
+      var table = getAncestorWithTags(rowElement, tableTags);
       if (table == null) { return results; }
       var tableRows = getTableRows(table);
       var positions = tableRows.map(function (_t, _i) { return []; });
@@ -480,7 +480,7 @@ var Q = function() {
       }
       colInfos.forEach(function (colInfo) {
         var rowCandidates = rowFindMethod(colInfo.table, selector.row).map(function (node) {
-          return getParentWithTags(node, rowTags);
+          return getAncestorWithTags(node, rowTags);
         }).filter(function (node) {
           return (node != null);
         });
