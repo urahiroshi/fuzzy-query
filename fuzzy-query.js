@@ -373,6 +373,8 @@ var Q = function() {
   };
 
   var findByTableSelector = function (current, selector) {
+    // Get node's ancestor having tags
+    // This method called recursively
     var getParentWithTags = function (node, tags) {
       if (node === root) { return null; }
       var parent = node.parentElement;
@@ -385,6 +387,9 @@ var Q = function() {
         return getParentWithTags(parent, tags);
       }
     };
+    // Get node's children having tags
+    // This method search direct children (not recursively called).
+    // This premises <tr>s have <td>s for their direct children.
     var getChildrenWithTags = function (parent, tags) {
       return Array.prototype.filter.call(parent.childNodes, function (node) {
         return (
@@ -401,6 +406,7 @@ var Q = function() {
     var rowTags = ['tr'];
     var rowParentTags = ['tbody', 'thead', 'tfoot'];
     var tableTags = ['table'];
+    // <tr>s are <table>'s children or grandchildren (children of rowParentTags)
     var getTableRows = function (table) {
       return Array.prototype.reduce.call(table.childNodes, function (results, node) {
         if (!node.tagName || !isVisibleElement(node)) { return results; }
@@ -412,6 +418,11 @@ var Q = function() {
       }, []);
     }
 
+    // Get column's table, rows, cell positions (two-dimensional array of [row][column])
+    // (To get column's index, it needs to calculate posigion of cells before target cell.
+    //  In passing that, calculate all cell's position for after execution.
+    //  But, it potentially doesn't need positions which are shown after target row.
+    //  This may be optimized in the future )
     var colInfos = colCandidates.reduce(function (results, candidate) {
       var colElement = getParentWithTags(candidate, colTags);
       if (colElement == null) { return results; }
