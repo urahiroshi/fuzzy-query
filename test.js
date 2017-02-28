@@ -39,4 +39,16 @@ describe('template', function() {
     expect(Q({col: /head2/, row: 1}, 'input').element.id === 'ex-table-selector');
   })
 
+  it('should take colspan to use table selector', function () {
+    expect(Q({col: /row2/, row: 3}).text() === 'cell12');
+  })
+
+  it('should take rowspan to use table selector', function () {
+    expect(Q({col: /row8/, row: /cell21/}).text() === 'cell28');
+  })
+
+  it('should ignore cell not displayed to use table selector', function () {
+    expect(Q({col: /row9/, row: /cell11/}).text() === 'cell19');
+  })
+
 })

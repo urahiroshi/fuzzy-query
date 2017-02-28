@@ -376,7 +376,10 @@ var Q = function() {
     var getParentWithTags = function (node, tags) {
       if (node === root) { return null; }
       var parent = node.parentElement;
-      if (tags.indexOf(parent.tagName.toLowerCase()) >= 0) {
+      if (
+        tags.indexOf(parent.tagName.toLowerCase()) >= 0 &&
+        isVisibleElement(parent)
+      ) {
         return parent;
       } else {
         return getParentWithTags(parent, tags);
@@ -384,7 +387,11 @@ var Q = function() {
     };
     var getChildrenWithTags = function (parent, tags) {
       return Array.prototype.filter.call(parent.childNodes, function (node) {
-        return (node.tagName && tags.indexOf(node.tagName.toLowerCase()) >= 0);
+        return (
+          node.tagName &&
+          tags.indexOf(node.tagName.toLowerCase()) >= 0 &&
+          isVisibleElement(node)
+        );
       });
     };
 
@@ -392,20 +399,66 @@ var Q = function() {
     var colCandidates = getFindMethodBySelector(selector.col)(current, selector.col);
     var colTags = ['td', 'th'];
     var rowTags = ['tr'];
-    var rowParentTags = ['tbody', 'thead'];
+    var rowParentTags = ['tbody', 'thead', 'tfoot'];
     var tableTags = ['table'];
-    var colInfos = [];
-    colCandidates.forEach(function (candidate) {
+    var getTableRows = function (table) {
+      return Array.prototype.reduce.call(table.childNodes, function (results, node) {
+        if (!node.tagName || !isVisibleElement(node)) { return results; }
+        if (rowTags.indexOf(node.tagName.toLowerCase()) >= 0) {
+          return results.concat([node]);
+        } else if (rowParentTags.indexOf(node.tagName.toLowerCase()) >= 0) {
+          return results.concat(getChildrenWithTags(node, rowTags));
+        }
+      }, []);
+    }
+
+    var colInfos = colCandidates.reduce(function (results, candidate) {
       var colElement = getParentWithTags(candidate, colTags);
-      if (colElement == null) { return; }
+      if (colElement == null) { return results; }
       var rowElement = colElement.parentElement;
-      if (rowTags.indexOf(rowElement.tagName.toLowerCase()) < 0) { return; }
-      var bros = getChildrenWithTags(rowElement, colTags);
+      if (rowTags.indexOf(rowElement.tagName.toLowerCase()) < 0) { return results; }
       var table = getParentWithTags(rowElement, tableTags);
-      colInfos.push({index: bros.indexOf(colElement), row: rowElement, table: table});
-    });
+      if (table == null) { return results; }
+      var tableRows = getTableRows(table);
+      var positions = tableRows.map(function (_t, _i) { return []; });
+      var setPosition = function (rowStart, colStart, cell) {
+        var spanToNumber = function (span) {
+          if (span === '0' || Number(span) > 1) {
+            return Number(span);
+          } else {
+            return 1;
+          }
+        };
+        rowSpan = spanToNumber(cell.getAttribute('rowspan'));
+        colSpan = spanToNumber(cell.getAttribute('colspan'));
+        while (positions[rowStart][colStart]) {
+          colStart++;
+        }
+        for (var i = 0; i < rowSpan; i++) {
+          for (var j = 0; j < colSpan; j++) {
+            positions[rowStart + i][colStart + j] = cell;
+          }
+        }
+        return colStart;
+      };
+      var candidateColIndex;
+      tableRows.forEach(function (tableRow, rowIndex) {
+        getChildrenWithTags(tableRow, colTags).forEach(function (cell, cellIndex) {
+          var colIndex = setPosition(rowIndex, cellIndex, cell);
+          if (cell === colElement) {
+            candidateColIndex = colIndex;
+          }
+        });
+      });
+      return results.concat([{
+        index: candidateColIndex,
+        positions: positions,
+        table: table,
+        tableRows: tableRows
+      }])
+    }, []);
     
-    var candidateInfos = [];
+    var candidateCells = [];
     // selector.row needs to be selector or row index number
     if (typeof selector.row !== 'number') {
       var rowFindMethod;
@@ -420,35 +473,16 @@ var Q = function() {
         }).filter(function (node) {
           return (node != null);
         });
-        candidateInfos = candidateInfos.concat(rowCandidates.map(function (rowCandidate) {
-          return {
-            row: rowCandidate,
-            colIndex: colInfo.index
-          };
+        candidateCells = candidateCells.concat(rowCandidates.map(function (rowCandidate) {
+          return colInfo.positions[colInfo.tableRows.indexOf(rowCandidate)][colInfo.index];
         }));
       });
     } else {
-      candidateInfos = colInfos.map(function (colInfo) {
-        var table = colInfo.table;
-        var tableRows = [];
-        Array.prototype.forEach.call(table.childNodes, function (node) {
-          if (!node.tagName) { return; }
-          if (rowTags.indexOf(node.tagName.toLowerCase()) >= 0) {
-            tableRows.push(node);
-          } else if (rowParentTags.indexOf(node.tagName.toLowerCase()) >= 0) {
-            tableRows = tableRows.concat(getChildrenWithTags(node, rowTags));
-          }
-        });
-        return {
-          row: tableRows[selector.row],
-          colIndex: colInfo.index
-        };
-      }).filter(function (candidateInfo) { return (candidateInfo.row != null); });
+      candidateCells = colInfos.map(function (colInfo) {
+        return colInfo.positions[selector.row][colInfo.index];
+      });
     }
-    return candidateInfos.map(function (candidateInfo) {
-      var cells = getChildrenWithTags(candidateInfo.row, colTags);
-      return cells[candidateInfo.colIndex]
-    }).filter(function (cell) { return (cell != null); });
+    return candidateCells.filter(function (cell) { return (cell != null); });
   };
 
   var getFindMethodBySelector = function (selector) {
