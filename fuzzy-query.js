@@ -360,6 +360,7 @@ var Q = function() {
   // search later nodes by query(String) selector
   var findLatestsByQuerySelector = function (current, selector) {
     var candidates = querySelectorAll(root, selector);
+    if (root === current) { return candidates; }
     return findLatests(current, function (node) {
       return findDeeps(
         node,
@@ -369,6 +370,140 @@ var Q = function() {
         function (n) { return isVisibleElement(n); }
       );
     }, true);
+  };
+
+  var findByTableSelector = function (current, selector) {
+    // Get node's ancestor having tags
+    // This method called recursively
+    var getAncestorWithTags = function (node, tags) {
+      if (node === root) { return null; }
+      var parent = node.parentElement;
+      if (
+        tags.indexOf(parent.tagName.toLowerCase()) >= 0 &&
+        isVisibleElement(parent)
+      ) {
+        return parent;
+      } else {
+        return getAncestorWithTags(parent, tags);
+      }
+    };
+    // Get node's children having tags
+    // This method search direct children (not recursively called).
+    // This premises <tr>s have <td>s for their direct children.
+    var getChildrenWithTags = function (parent, tags) {
+      return Array.prototype.filter.call(parent.childNodes, function (node) {
+        return (
+          node.tagName &&
+          tags.indexOf(node.tagName.toLowerCase()) >= 0 &&
+          isVisibleElement(node)
+        );
+      });
+    };
+
+    // selector.col need to be selector
+    var colCandidates = getFindMethodBySelector(selector.col)(current, selector.col);
+    var colTags = ['td', 'th'];
+    var rowTags = ['tr'];
+    var rowParentTags = ['tbody', 'thead', 'tfoot'];
+    var tableTags = ['table'];
+    // <tr>s are <table>'s children or grandchildren (children of rowParentTags)
+    var getTableRows = function (table) {
+      return Array.prototype.reduce.call(table.childNodes, function (results, node) {
+        if (!node.tagName || !isVisibleElement(node)) { return results; }
+        if (rowTags.indexOf(node.tagName.toLowerCase()) >= 0) {
+          return results.concat([node]);
+        } else if (rowParentTags.indexOf(node.tagName.toLowerCase()) >= 0) {
+          return results.concat(getChildrenWithTags(node, rowTags));
+        }
+      }, []);
+    }
+
+    // Get column's table, rows, cell positions (two-dimensional array of [row][column])
+    // (To get column's index, it needs to calculate posigion of cells before target cell.
+    //  In passing that, calculate all cell's position for after execution.
+    //  But, it potentially doesn't need positions which are shown after target row.
+    //  This may be optimized in the future )
+    var colInfos = colCandidates.reduce(function (results, candidate) {
+      var colElement = getAncestorWithTags(candidate, colTags);
+      if (colElement == null) { return results; }
+      var rowElement = colElement.parentElement;
+      if (rowTags.indexOf(rowElement.tagName.toLowerCase()) < 0) { return results; }
+      var table = getAncestorWithTags(rowElement, tableTags);
+      if (table == null) { return results; }
+      var tableRows = getTableRows(table);
+      var positions = tableRows.map(function (_t, _i) { return []; });
+      var setPosition = function (rowStart, colStart, cell) {
+        var spanToNumber = function (span) {
+          if (span === '0' || Number(span) > 1) {
+            return Number(span);
+          } else {
+            return 1;
+          }
+        };
+        rowSpan = spanToNumber(cell.getAttribute('rowspan'));
+        colSpan = spanToNumber(cell.getAttribute('colspan'));
+        while (positions[rowStart][colStart]) {
+          colStart++;
+        }
+        for (var i = 0; i < rowSpan; i++) {
+          for (var j = 0; j < colSpan; j++) {
+            positions[rowStart + i][colStart + j] = cell;
+          }
+        }
+        return colStart;
+      };
+      var candidateColIndex;
+      tableRows.forEach(function (tableRow, rowIndex) {
+        getChildrenWithTags(tableRow, colTags).forEach(function (cell, cellIndex) {
+          var colIndex = setPosition(rowIndex, cellIndex, cell);
+          if (cell === colElement) {
+            candidateColIndex = colIndex;
+          }
+        });
+      });
+      return results.concat([{
+        index: candidateColIndex,
+        positions: positions,
+        table: table,
+        tableRows: tableRows
+      }])
+    }, []);
+    
+    var candidateCells = [];
+    // selector.row needs to be selector or row index number
+    if (typeof selector.row !== 'number') {
+      var rowFindMethod;
+      if (isRegExp(selector.row)) {
+        rowFindMethod = findDeepsByRegSelector;
+      } else {
+        rowFindMethod = querySelectorAll;
+      }
+      colInfos.forEach(function (colInfo) {
+        var rowCandidates = rowFindMethod(colInfo.table, selector.row).map(function (node) {
+          return getAncestorWithTags(node, rowTags);
+        }).filter(function (node) {
+          return (node != null);
+        });
+        candidateCells = candidateCells.concat(rowCandidates.map(function (rowCandidate) {
+          return colInfo.positions[colInfo.tableRows.indexOf(rowCandidate)][colInfo.index];
+        }));
+      });
+    } else {
+      candidateCells = colInfos.map(function (colInfo) {
+        return colInfo.positions[selector.row][colInfo.index];
+      });
+    }
+    return candidateCells.filter(function (cell) { return (cell != null); });
+  };
+
+  var getFindMethodBySelector = function (selector) {
+    if (isRegExp(selector)) {
+      return findLatestsByRegSelector;
+    } else if (selector.col != null && selector.row != null) {
+      return findByTableSelector;
+    } else {
+      return findLatestsByQuerySelector;
+    }
   };
 
   // ---- helper method fof main method ----
@@ -410,15 +545,13 @@ var Q = function() {
     }
     // pare down the candidates by selectors
     results = selectors.reduce(function (candidates, selector) {
+      var findMethod = getFindMethodBySelector(selector);
       return candidates.reduce(function (nextCandidates, candidateNodes) {
-        var findMethod;
         if (candidateNodes === root) {
-          findMethod = (isRegExp(selector)) ? findDeepsByRegSelector : querySelectorAll;
           return nextCandidates.concat(findMethod(candidateNodes, selector).map(function (node) {
             return [node];
           }));
         } else {
-          findMethod = (isRegExp(selector)) ? findLatestsByRegSelector : findLatestsByQuerySelector;
           var previous = candidateNodes[candidateNodes.length - 1];
           return nextCandidates.concat(findMethod(previous, selector).map(function (node) {
             return candidateNodes.concat([node]);
