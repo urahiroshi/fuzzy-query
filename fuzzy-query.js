@@ -70,8 +70,8 @@ var Q = function() {
 
     var _selectElement = function (element) {
       var parent = element.parentElement;
-      if (_isDisabled(parent)) { return null; }
-      parent.value = element.value;
+      if (_isDisabled(parent) || _isDisabled(element)) { return null; }
+      element.selected = true;
       _dispatchEvent(parent, 'change');
       return parent;
     };

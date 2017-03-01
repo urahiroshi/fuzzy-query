@@ -51,4 +51,19 @@ describe('template', function() {
     expect(Q({col: /row9/, row: /cell11/}).text() === 'cell19');
   })
 
+  it('should select by regexp', function () {
+    Q(/Selections:/).select('do.*');
+    expect(
+      document.querySelector('#ex-selections').value === 'animal' &&
+      document.querySelector('#ex-select-by-regexp').selected === true
+    );
+  })
+
+  it('should select option having same value', function () {
+    Q(/Selections:/).select('durian');
+    expect(
+      document.querySelector('#ex-selections').value === 'fruits' &&
+      document.querySelector('#ex-select-same-value').selected === true
+    );
+  })
 })
