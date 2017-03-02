@@ -80,6 +80,7 @@ var Q = function() {
       if (_isDisabled(element)) { return null; }
       element.checked = true;
       _dispatchEvent(element, 'change');
+      _dispatchEvent(element, 'click');
       return element;
     };
 
