@@ -490,6 +490,7 @@ var Q = function() {
       });
     } else {
       candidateCells = colInfos.map(function (colInfo) {
+        if (colInfo.positions[selector.row] == null) { return null; }
         return colInfo.positions[selector.row][colInfo.index];
       });
     }
