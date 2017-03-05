@@ -11,7 +11,7 @@ fuzzy-query
 
 #### Selectors
 
-- RegExp Selector
+##### RegExp Selector
 
   ```html
   <!-- click me ! -->
@@ -22,7 +22,7 @@ fuzzy-query
   </script>
   ```
 
-- CSS selector
+##### CSS selector
 
   ```html
   <!-- click me ! -->
@@ -33,7 +33,7 @@ fuzzy-query
   </script>
   ```
 
-- Ordered Selector (combination of selectors)
+##### Ordered Selector (combination of selectors)
 
   ```html
   <h3>foo</h3>
@@ -48,7 +48,7 @@ fuzzy-query
   </script>
   ```
 
-- Orderd Selector with index (last argument)
+##### Orderd Selector with index (last argument)
 
   ```html
   <h3>foo</h3>
@@ -61,7 +61,7 @@ fuzzy-query
   </script>
   ```
 
-- table selector
+##### table selector
 
   ```html
   <table>
@@ -91,6 +91,27 @@ fuzzy-query
   Q({col: /head2/, row: /value1/}, 'input').click();
   // row can also be index number
   Q({col: /head2/, row: 1}, 'input').click();
+  </script>
+  ```
+
+##### heading selector
+
+find "heading element" by heading key,
+and find next element until "next heading element"
+which has same style (*) of heading element.
+
+*same style means two elements having same class, style attributes and
+same style ancestors.
+
+  ```html
+  <h3 style="color: blue;" class="colors natural">sky</h3>
+  <div>foo</div>
+  <h3 style="color: blue;" class="colors natural">sea</h3>
+  <div>foo</div>
+
+  <script>
+  Q({heading: /sky/}, /foo/);        // find element <div>foo</div>
+  Q({heading: /sky/}, /foo/, /foo/); // not find element
   </script>
   ```
 
@@ -133,7 +154,7 @@ fuzzy-query
 
 #### Operations
 
-- click
+##### click
 
   ```html
   <button>foo</button>
@@ -143,8 +164,9 @@ fuzzy-query
   </script>
   ```
 
-- select (list)
-  - select() has a string argument (it is interpreted by RegExp)
+##### select (list)
+
+this method has a string argument (it is interpreted by RegExp)
 
   ```html
   <div>
@@ -162,7 +184,7 @@ fuzzy-query
   </script>
   ```
 
-- select (checkbox)
+##### select (checkbox)
 
   ```html
   <input type="radio" value="foo" /> foo
@@ -174,7 +196,7 @@ fuzzy-query
   </script>
   ```
 
-- type
+##### type
 
   ```html
   <div>
@@ -186,7 +208,7 @@ fuzzy-query
   </script>
   ```
 
-- text
+##### text
 
   ```html
   <h3>foo</h3>
