@@ -304,6 +304,16 @@ var FQ = function() {
 
     // ---- private methods ----
 
+    var isSelfOrChild = function (parent, targetNode) {
+      if (parent === targetNode) { return true; }
+      if (parent.nodeType !== Node.ELEMENT_NODE || parent.childNodes.length === 0) {
+        return false;
+      }
+      return (!Array.prototype.every.call(parent.childNodes, function (child) {
+        return !isSelfOrChild(child, targetNode);
+      }));
+    };
+
     // search children recursively.
     // if elements which is not ancestor-descendant relation found, select all.
     var findDeeps = function (parent, findMethod, filterMethod, preferDescendant) {
@@ -315,14 +325,21 @@ var FQ = function() {
       if (!preferDescendant) {
         if (findMethod(parent)) { results.push(parent); }
       }
-      var candidates = Array.prototype.filter.call(parent.childNodes, function (child) {
-        return filterMethod(child);
-      });
-      results = candidates.reduce(function (results, candidate) {
-        return results.concat(
-          findDeeps(candidate, findMethod, filterMethod, preferDescendant)
-        );
-      }, results);
+      results = Array.prototype.reduce.call(
+        parent.childNodes,
+        function (nextResults, child, i) {
+          if (!filterMethod(child)) {
+            if (self.options.endBy && isSelfOrChild(child, self.options.endBy)) {
+              self.isEnded = true;
+            }
+            return nextResults;
+          }
+          return results.concat(
+            findDeeps(child, findMethod, filterMethod, preferDescendant)
+          );
+        },
+        results
+      );
       if (preferDescendant && results.length === 0 && !self.isEnded) {
         if (findMethod(parent)) { results.push(parent); }
       }
@@ -541,6 +558,7 @@ var FQ = function() {
       endBy: null
     };
     self.options = {};
+    options = options || {};
     Object.keys(defaultOptions).forEach(function (optionKey) {
       self.options[optionKey] = options[optionKey] || defaultOptions[optionKey];
     });
@@ -632,7 +650,7 @@ var FQ = function() {
     var candidateNodesToObj = function (candidateNodes, finderOptions) {
       return {
         nodes: candidateNodes,
-        finderOptions: finderOptions
+        finderOptions: finderOptions || {}
       };
     };
 
@@ -661,7 +679,7 @@ var FQ = function() {
     };
 
     // ---- initialize CandidatesFinder ----
-    self.candidates = [{ nodes: [], finderOptions: {} }];
+    self.candidates = [{ nodes: [] }];
 
     // ---- public methods ----
 

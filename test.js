@@ -88,6 +88,15 @@ describe('template', function() {
     it('not regard same heading if different ancestors', function () {
       expect(FQ({ heading: /ruby/ }, /foo/, /foo/)).not.toBe(null);
     });
+
+    it('should select by nested heading selector', function () {
+      expect(FQ({ heading: /class A/ }, { heading: /Ken/ }, /male/).element.id).toBe(
+        'ex-nested-heading-selector'
+      );
+      expect(FQ({ heading: /class A/ }, { heading: /Ken/ }, /male/, /male/)).toBe(
+        null
+      );
+    });
   });
 
   describe('group member selector', function () {
@@ -102,6 +111,21 @@ describe('template', function() {
       expect(FQ({ group: '.natural', member: /sun/}, /foo/, /foo/).element.id).toBe(
         'ex-not-same-group'
       );
+    });
+
+    it('should select by nested group member selector', function () {
+      expect(
+        FQ(
+          { group: '.classroom', member: /class A/ },
+          { group: '.name', member: /Jiro/ },
+          /male/
+        ).element.id).toBe('ex-nested-group-member-selector');
+      expect(
+        FQ(
+          { group: '.classroom', member: /class A/ },
+          { group: '.name', member: /Jiro/ },
+          /male/, /male/
+        )).toBe(null);
     });
   });
 
