@@ -94,6 +94,23 @@ fuzzy-query
   </script>
   ```
 
+##### group member selector
+
+grouping elements by group value (need to be query selector),
+member and post selectors will search nodes between grouping elements.
+
+  ```html
+  <h3 style="color: blue;" class="colors natural">sea</h3>
+  <div>foo</div>
+  <h3 style="color: red;" class="colors natural">sun</h3>
+  <div>foo</div>
+  
+  <script>
+  Q({group: '.colors', member: /sea/}, /foo/);        // find element <div>foo</div>
+  Q({group: '.colors', member: /sea/}, /foo/, /foo/); // not find element
+  </script>
+  ```
+
 ##### heading selector
 
 find "heading element" by heading key,

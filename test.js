@@ -90,4 +90,19 @@ describe('template', function() {
     });
   });
 
+  describe('group member selector', function () {
+    it('should select by group member selector', function () {
+      expect(Q({ group: '.colors', member: /sea/}, /foo/).element.id).toBe(
+        'ex-group-member-selector'
+      );
+      expect(Q({ group: '.colors', member: /sea/}, /foo/, /foo/)).toBe(null);
+    });
+
+    it('not regard same group if group selector not matched', function () {
+      expect(Q({ group: '.natural', member: /sun/}, /foo/, /foo/).element.id).toBe(
+        'ex-not-same-group'
+      );
+    });
+  });
+
 })

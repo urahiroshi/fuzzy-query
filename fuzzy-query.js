@@ -247,11 +247,15 @@ var Q = function() {
 
   var isHeadingSelector = function (selector) {
     return (selector.heading != null);
-  }
+  };
+
+  var isGroupMemberSelector = function (selector) {
+    return (selector.group != null && selector.member != null);
+  };
 
   var isTableSelector = function (selector) {
     return (selector.col != null && selector.row != null);
-  }
+  };
 
   // search children recursively.
   // if elements which is ancestor-descendant relation found, select descendant.
@@ -368,13 +372,6 @@ var Q = function() {
         return candidates;
       } else {
         return candidates.concat(findLatests(parent, findMethod));
-      }
-    };
-
-    var getFindMethodByKey = function (selectorKey) {
-      return function (current, selector) {
-        var findMethod = getFindMethodBySelector(selector[selectorKey]);
-        return findMethod(current, selector[selectorKey]);
       }
     };
 
@@ -533,8 +530,6 @@ var Q = function() {
         return findLatestsByRegSelector;
       } else if (isTableSelector(selector)) {
         return findByTableSelector;
-      } else if (isHeadingSelector(selector)) {
-        return getFindMethodByKey('heading');
       } else {
         return findLatestsByQuerySelector;
       }
@@ -589,29 +584,56 @@ var Q = function() {
       return isSameStyle(element1.parentElement, element2.parentElement);
     };
 
+    var getEndNodeByHeadingSelector = function (headingNode, selector) {
+      if (headingNode.nodeType !== Node.ELEMENT_NODE) {
+        headingNode = headingNode.parentElement;
+      }
+      return findLatest(headingNode, function(node) {
+        return findDeep(
+          node,
+          // find method
+          function (n) { return isSameStyle(headingNode, n); },
+          // filter method
+          isVisibleElement
+        );
+      });
+    };
+
+    var getEndNodeByGroupMemberSelector = function (memberNode, selector) {
+      var groupElements = querySelectorAll(root, selector.group);
+      return findLatest(memberNode, function (node) {
+        return findDeep(
+          node,
+          // find method
+          function (n) { return groupElements.indexOf(n) >= 0; },
+          // filter method
+          isVisibleElement
+        );
+      });
+    };
+
+    // set finderOptions for later selectors
+    var updateFinderOptions = function (candidate, selector) {
+      var candidateNodes = candidate.nodes;
+      var selectedNode, endBy;
+      if (candidateNodes.length === 0) { return; }
+      selectedNode = candidateNodes[candidateNodes.length - 1];
+      if (isHeadingSelector(selector)) {
+        endBy = getEndNodeByHeadingSelector(selectedNode, selector);
+      } else if (isGroupMemberSelector(selector)) {
+        endBy = getEndNodeByGroupMemberSelector(selectedNode, selector);
+      }
+      if (endBy) {
+        candidate.finderOptions.endBy = endBy;
+      }
+    };
+
     // convert candidates to candidates object list
-    // (set finderOptions for later selectors)
-    var candidateNodesToObj = function (candidateNodes, selector, finderOptions) {
-      var candidateObject  = {
+    var candidateNodesToObj = function (candidateNodes, finderOptions) {
+      return {
         nodes: candidateNodes,
         finderOptions: finderOptions
       };
-      if (isHeadingSelector(selector)) {
-        var headingNode = candidateNodes[candidateNodes.length - 1];
-        if (headingNode.nodeType !== Node.ELEMENT_NODE) {
-          headingNode = headingNode.parentElement;
-        }
-        candidateObject.finderOptions.endBy = findLatest(headingNode, function(node) {
-          return findDeep(
-            node,
-            // find method
-            function (n) { return isSameStyle(headingNode, n); },
-            // filter method
-            isVisibleElement
-          );
-        });
-      }
-      return candidateObject;
     };
 
     // Get next candidate nodes by selector.
@@ -631,7 +653,7 @@ var Q = function() {
         var addingNodes = finder.findNodes(previous, selector);
         return nextCandidates.concat(addingNodes.map(function (addingNode) {
           var nextCandidateNodes = candidateNodes.concat([addingNode]);
-          return candidateNodesToObj(nextCandidateNodes, selector, candidate.finderOptions);
+          return candidateNodesToObj(nextCandidateNodes, candidate.finderOptions);
         }));
       }, []);
       self.candidates = candidates;
@@ -648,7 +670,22 @@ var Q = function() {
     // it returns such as [[node11, node12, node13], [node21, node22, node23]].
     // (node index is match with selector index)
     self.getCandidateNodesList = function (selectors) {
-      selectors.forEach(next);
+      selectors.forEach(function (selector) {
+        if (isGroupMemberSelector(selector)) {
+          next(selector.group);
+          next(selector.member);
+          self.candidates.forEach(function (candidate) {
+            candidate.nodes.splice(candidate.nodes.length - 2, 1);
+          });
+        } else if (isHeadingSelector(selector)) {
+          next(selector.heading);
+        } else {
+          next(selector);
+        }
+        self.candidates.forEach(function (candidate) {
+          updateFinderOptions(candidate, selector);
+        });
+      });
       return self.candidates.map(function (candidate) {
         return candidate.nodes;
       });
