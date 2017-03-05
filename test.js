@@ -81,8 +81,12 @@ describe('template', function() {
       expect(Q({ heading: /sun/ }, /foo/, /foo/)).not.toBe(null);
     });
 
-    it('not regard same heading if ancestor is not matched', function () {
+    it('not regard same heading if tagName is not matched', function () {
       expect(Q({ heading: /post/ }, /foo/, /foo/)).not.toBe(null);
+    });
+
+    it('not regard same heading if different ancestors', function () {
+      expect(Q({ heading: /ruby/ }, /foo/, /foo/)).not.toBe(null);
     });
   });
 
