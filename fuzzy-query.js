@@ -1,9 +1,9 @@
-var Q = function() {
+var FQ = function() {
   // search root
   var root = document.querySelector('body');
 
   // Result Class by fuzzy-query
-  var QElement = function (node) {
+  var FQNode = function (node) {
     // ---- private methods ----
 
     var isTypable = function (node) {
@@ -299,7 +299,7 @@ var Q = function() {
 
   // ---- finder class ----
 
-  var QNodesFinder = function (options) {
+  var NodesFinder = function (options) {
     var self = this;
 
     // ---- private methods ----
@@ -553,7 +553,7 @@ var Q = function() {
     };
   };
 
-  var QCandidatesFinder = function () {
+  var CandidatesFinder = function () {
     self = this;
 
     // ---- private methods ----
@@ -646,7 +646,7 @@ var Q = function() {
     var next = function (selector) {
       var candidates = self.candidates.reduce(function (nextCandidates, candidate) {
         var candidateNodes = candidate.nodes;
-        var finder = new QNodesFinder(candidate.finderOptions);
+        var finder = new NodesFinder(candidate.finderOptions);
         var previous = ((candidateNodes.length > 0) ?
           candidateNodes[candidateNodes.length - 1] : root
         );
@@ -660,7 +660,7 @@ var Q = function() {
       return candidates;
     };
 
-    // ---- initialize QCandidatesFinder ----
+    // ---- initialize CandidatesFinder ----
     self.candidates = [{ nodes: [], finderOptions: {} }];
 
     // ---- public methods ----
@@ -728,7 +728,7 @@ var Q = function() {
     if (isInteger(selectors[selectorIndex])) {
       selectorIndex = selectors.pop();
     }
-    var candidatesFinder = new QCandidatesFinder();
+    var candidatesFinder = new CandidatesFinder();
     var candidates = candidatesFinder.getCandidateNodesList(selectors);
 
     // if multiple results found, select one.
@@ -736,7 +736,7 @@ var Q = function() {
       candidates = selectLastFirstNode(candidates);
     }
     if (candidates[0] && candidates[0][selectorIndex]) {
-      return (new QElement(candidates[0][selectorIndex]));
+      return (new FQNode(candidates[0][selectorIndex]));
     }
     return null;
   };

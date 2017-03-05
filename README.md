@@ -18,7 +18,7 @@ fuzzy-query
   <button>foo</button>
 
   <script>
-  Q(/foo/).click();
+  FQ(/foo/).click();
   </script>
   ```
 
@@ -29,7 +29,7 @@ fuzzy-query
   <button class='foo-btn'>foo</button>
 
   <script>
-  Q('.foo-btn').click();
+  FQ('.foo-btn').click();
   </script>
   ```
 
@@ -44,7 +44,7 @@ fuzzy-query
   <button>bar</button>
 
   <script>
-  Q(/baz/, /bar/).click();
+  FQ(/baz/, /bar/).click();
   </script>
   ```
 
@@ -57,7 +57,7 @@ fuzzy-query
   <h3>baz</h3>
 
   <script>
-  Q(/foo/, 'a', /baz/, 1).click();
+  FQ(/foo/, 'a', /baz/, 1).click();
   </script>
   ```
 
@@ -88,9 +88,9 @@ fuzzy-query
   </table>
   
   <script>
-  Q({col: /head2/, row: /value1/}, 'input').click();
+  FQ({col: /head2/, row: /value1/}, 'input').click();
   // row can also be index number
-  Q({col: /head2/, row: 1}, 'input').click();
+  FQ({col: /head2/, row: 1}, 'input').click();
   </script>
   ```
 
@@ -106,8 +106,8 @@ member and post selectors will search nodes between grouping elements.
   <div>foo</div>
   
   <script>
-  Q({group: '.colors', member: /sea/}, /foo/);        // find element <div>foo</div>
-  Q({group: '.colors', member: /sea/}, /foo/, /foo/); // not find element
+  FQ({group: '.colors', member: /sea/}, /foo/);        // find element <div>foo</div>
+  FQ({group: '.colors', member: /sea/}, /foo/, /foo/); // not find element
   </script>
   ```
 
@@ -127,8 +127,8 @@ same style ancestors.
   <div>foo</div>
 
   <script>
-  Q({heading: /sky/}, /foo/);        // find element <div>foo</div>
-  Q({heading: /sky/}, /foo/, /foo/); // not find element
+  FQ({heading: /sky/}, /foo/);        // find element <div>foo</div>
+  FQ({heading: /sky/}, /foo/, /foo/); // not find element
   </script>
   ```
 
@@ -151,7 +151,7 @@ same style ancestors.
   </table>
 
   <script>
-  Q('a', /foobar/, 0).click();
+  FQ('a', /foobar/, 0).click();
   </script>
   ```
 
@@ -165,7 +165,7 @@ same style ancestors.
   <button>baz</button>
 
   <script>
-  Q(/foo/, 'button').click();
+  FQ(/foo/, 'button').click();
   </script>
   ```
 
@@ -177,7 +177,7 @@ same style ancestors.
   <button>foo</button>
 
   <script>
-  Q(/foo/).click();
+  FQ(/foo/).click();
   </script>
   ```
 
@@ -197,7 +197,7 @@ this method has a string argument (it is interpreted by RegExp)
   </div>
 
   <script>
-  Q(/Value:/, 'select').select('bar');
+  FQ(/Value:/, 'select').select('bar');
   </script>
   ```
 
@@ -209,7 +209,7 @@ this method has a string argument (it is interpreted by RegExp)
   <input type="radio" value="bar" /> bar
 
   <script>
-  Q('input', /bar/, 0).select();
+  FQ('input', /bar/, 0).select();
   </script>
   ```
 
@@ -221,7 +221,7 @@ this method has a string argument (it is interpreted by RegExp)
   </div>
 
   <script>
-  Q(/Value:/, 'input').type('foo');
+  FQ(/Value:/, 'input').type('foo');
   </script>
   ```
 
@@ -232,7 +232,7 @@ this method has a string argument (it is interpreted by RegExp)
   <div>get this text !</div>
 
   <script>
-  Q(/foo/, 'div').text();
+  FQ(/foo/, 'div').text();
   // => 'get this text !'
   </script>
   ```
