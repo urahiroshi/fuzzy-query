@@ -62,4 +62,28 @@ describe('template', function() {
     expect(document.querySelector('#ex-selections').value).toBe('fruits');
     expect(document.querySelector('#ex-select-same-value').selected).toBeTruthy();
   })
+
+  describe('heading selector', function () {
+    it('should select by heading selector', function () {
+      expect(Q({ heading: /sky/ }, /foo/).element.id).toBe('ex-heading-selector');
+      expect(Q({ heading: /sky/ }, /foo/, /foo/)).toBe(null);
+    });
+
+    it('not regard same heading if style is not matched', function () {
+      expect(Q({ heading: /sea/ }, /foo/, /foo/)).not.toBe(null);
+    });
+
+    it('not regard same heading if class is not matched', function () {
+      expect(Q({ heading: /sun/ }, /foo/, /foo/)).not.toBe(null);
+    });
+
+    it('not regard same heading if class is not matched', function () {
+      expect(Q({ heading: /sun/ }, /foo/, /foo/)).not.toBe(null);
+    });
+
+    it('not regard same heading if ancestor is not matched', function () {
+      expect(Q({ heading: /post/ }, /foo/, /foo/)).not.toBe(null);
+    });
+  });
+
 })
