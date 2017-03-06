@@ -11,29 +11,29 @@ fuzzy-query
 
 #### Selectors
 
-- RegExp Selector
+##### RegExp Selector
 
   ```html
   <!-- click me ! -->
   <button>foo</button>
 
   <script>
-  Q(/foo/).click();
+  FQ(/foo/).click();
   </script>
   ```
 
-- CSS selector
+##### CSS selector
 
   ```html
   <!-- click me ! -->
   <button class='foo-btn'>foo</button>
 
   <script>
-  Q('.foo-btn').click();
+  FQ('.foo-btn').click();
   </script>
   ```
 
-- Ordered Selector (combination of selectors)
+##### Ordered Selector (combination of selectors)
 
   ```html
   <h3>foo</h3>
@@ -44,11 +44,11 @@ fuzzy-query
   <button>bar</button>
 
   <script>
-  Q(/baz/, /bar/).click();
+  FQ(/baz/, /bar/).click();
   </script>
   ```
 
-- Orderd Selector with index (last argument)
+##### Orderd Selector with index (last argument)
 
   ```html
   <h3>foo</h3>
@@ -57,11 +57,11 @@ fuzzy-query
   <h3>baz</h3>
 
   <script>
-  Q(/foo/, 'a', /baz/, 1).click();
+  FQ(/foo/, 'a', /baz/, 1).click();
   </script>
   ```
 
-- table selector
+##### table selector
 
   ```html
   <table>
@@ -88,9 +88,47 @@ fuzzy-query
   </table>
   
   <script>
-  Q({col: /head2/, row: /value1/}, 'input').click();
+  FQ({col: /head2/, row: /value1/}, 'input').click();
   // row can also be index number
-  Q({col: /head2/, row: 1}, 'input').click();
+  FQ({col: /head2/, row: 1}, 'input').click();
+  </script>
+  ```
+
+##### group member selector
+
+grouping elements by group value (need to be query selector),
+member and post selectors will search nodes between grouping elements.
+
+  ```html
+  <h3 style="color: blue;" class="colors natural">sea</h3>
+  <div>foo</div>
+  <h3 style="color: red;" class="colors natural">sun</h3>
+  <div>foo</div>
+  
+  <script>
+  FQ({group: '.colors', member: /sea/}, /foo/);        // find element <div>foo</div>
+  FQ({group: '.colors', member: /sea/}, /foo/, /foo/); // not find element
+  </script>
+  ```
+
+##### heading selector
+
+find "heading element" by heading key,
+and find next element until "next heading element"
+which has same style (*) of heading element.
+
+*same style means two elements having same class, style attributes and
+same style ancestors.
+
+  ```html
+  <h3 style="color: blue;" class="colors natural">sky</h3>
+  <div>foo</div>
+  <h3 style="color: blue;" class="colors natural">sea</h3>
+  <div>foo</div>
+
+  <script>
+  FQ({heading: /sky/}, /foo/);        // find element <div>foo</div>
+  FQ({heading: /sky/}, /foo/, /foo/); // not find element
   </script>
   ```
 
@@ -113,7 +151,7 @@ fuzzy-query
   </table>
 
   <script>
-  Q('a', /foobar/, 0).click();
+  FQ('a', /foobar/, 0).click();
   </script>
   ```
 
@@ -127,24 +165,25 @@ fuzzy-query
   <button>baz</button>
 
   <script>
-  Q(/foo/, 'button').click();
+  FQ(/foo/, 'button').click();
   </script>
   ```
 
 #### Operations
 
-- click
+##### click
 
   ```html
   <button>foo</button>
 
   <script>
-  Q(/foo/).click();
+  FQ(/foo/).click();
   </script>
   ```
 
-- select (list)
-  - select() has a string argument (it is interpreted by RegExp)
+##### select (list)
+
+this method has a string argument (it is interpreted by RegExp)
 
   ```html
   <div>
@@ -158,11 +197,11 @@ fuzzy-query
   </div>
 
   <script>
-  Q(/Value:/, 'select').select('bar');
+  FQ(/Value:/, 'select').select('bar');
   </script>
   ```
 
-- select (checkbox)
+##### select (checkbox)
 
   ```html
   <input type="radio" value="foo" /> foo
@@ -170,11 +209,11 @@ fuzzy-query
   <input type="radio" value="bar" /> bar
 
   <script>
-  Q('input', /bar/, 0).select();
+  FQ('input', /bar/, 0).select();
   </script>
   ```
 
-- type
+##### type
 
   ```html
   <div>
@@ -182,18 +221,18 @@ fuzzy-query
   </div>
 
   <script>
-  Q(/Value:/, 'input').type('foo');
+  FQ(/Value:/, 'input').type('foo');
   </script>
   ```
 
-- text
+##### text
 
   ```html
   <h3>foo</h3>
   <div>get this text !</div>
 
   <script>
-  Q(/foo/, 'div').text();
+  FQ(/foo/, 'div').text();
   // => 'get this text !'
   </script>
   ```

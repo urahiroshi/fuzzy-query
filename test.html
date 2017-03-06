@@ -5,6 +5,13 @@
   <body>
     <button id="ex-regexp-selector">apple</button>
 
+    <div id="ex-regexp-selector-parent">
+      strawberry
+      <span>is</span>
+      <span>very</span>
+      sweet
+    </div>
+
     <button class="foo-btn" id="ex-css-selector">apricot</button>
 
     <h3>avocado</h3>
@@ -36,7 +43,11 @@
     <button>lime</button>
 
     <div class="fruits-1">
-      <div id="ex-search-children">melon</div>
+      <div>melon
+        <div>melon
+          <div id="ex-search-children">melon</div>
+        </div>
+      </div>
     </div>
     <div>melon</div>
 
@@ -109,6 +120,45 @@
         </tr>
       </tfoot>
     </table>
+
+    <section>
+      <h3 style="color: blue;" class="colors natural">sky</h3>
+      <div id="ex-heading-selector">foo</div>
+      <h3 style="color: blue;" class="colors natural">sea</h3>
+      <div id="ex-group-member-selector">foo</div>
+      <h3 style="color: red;" class="colors natural">sun</h3>
+      <div>foo</div>
+      <h3 style="color: red;" class="colors">post</h3>
+      <div id="ex-not-same-group">foo</div>
+      <div style="color: red;" class="colors">ruby</div>
+      <div>foo</div>
+    </section>
+    <div style="color: red;" class="colors">dummy</div>
+    <div>foo</div>
+
+    <section>
+      <h3 class="classroom">class A</h3>
+      <div class="student">
+        <div class="name">Ken</div>
+        <div class="sex" id="ex-nested-heading-selector">male</div>
+      </div>
+      <div class="student">
+        <div class="name" id="testhoge">Jiro</div>
+        <div class="sex" id="ex-nested-group-member-selector">male</div>
+      </div>
+      <div class="student">
+        <div class="name">Taro</div>
+        <div class="sex">male</div>
+      </div>
+
+      <h3 class="classroom">class B</h3>
+      <div class="student">
+        <div class="name">Ken</div>
+      </div>
+      <div class="student">
+        <div class="name">Jiro</div>
+      </div>
+    </section>
 
     <h3>Selections:</h3>
     <select id="ex-selections">
