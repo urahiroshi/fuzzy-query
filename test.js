@@ -7,6 +7,12 @@ describe('fuzzy-query', function() {
     it('should work', function () {
       expect(FQ(/apple/).element.id).toBe('ex-regexp-selector');
     });
+
+    it('should select parent element', function () {
+      expect(FQ(/strawberry *is *very *sweet/).element.id).toBe(
+        'ex-regexp-selector-parent'
+      );
+    });
   });
 
   describe('css selector', function () {
@@ -24,8 +30,16 @@ describe('fuzzy-query', function() {
       expect(FQ(/plum/, 'a', /orange/, 1).element.id).toBe('ex-index-ordered-selector');
     });
 
-    it('should select children of element selected by previous selector', function () {
-      expect(FQ('.fruits-1', /melon/).element.id).toBe('ex-search-children');
+    it('should select children of previous selector element by regexp selector', function () {
+      expect(FQ('.fruits-1', /melon/, /melon/, /melon/).element.id).toBe(
+        'ex-search-children'
+      );
+    });
+
+    it('should select children of previous selector element by css selector', function () {
+      expect(FQ('.fruits-1', 'div', 'div', 'div').element.id).toBe(
+        'ex-search-children'
+      );
     });
   });
 
