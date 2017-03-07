@@ -49,8 +49,14 @@ var FQ = function() {
       return (element.getAttribute('disabled') != null);
     };
 
-    var _dispatchEvent = function (element, type) {
+    var _htmlEvent = function (element, type) {
       var event = document.createEvent('HTMLEvents');
+      event.initEvent(type, true, true);
+      element.dispatchEvent(event);
+    }
+
+    var _mouseEvent = function (element, type) {
+      var event = document.createEvent('MouseEvents');
       event.initEvent(type, true, true);
       element.dispatchEvent(event);
     }
@@ -58,13 +64,13 @@ var FQ = function() {
     var _typeElement = function (element, value) {
       if (_isDisabled(element)) { return null; }
       element.value = value;
-      _dispatchEvent(element, 'change');
+      _htmlEvent(element, 'change');
       return element;
     };
 
     var _clickElement = function (element) {
       if (_isDisabled(element)) { return null; }
-      _dispatchEvent(element, 'click');
+      _mouseEvent(element, 'click');
       return element;
     };
 
@@ -72,15 +78,15 @@ var FQ = function() {
       var parent = element.parentElement;
       if (_isDisabled(parent) || _isDisabled(element)) { return null; }
       element.selected = true;
-      _dispatchEvent(parent, 'change');
+      _htmlEvent(parent, 'change');
       return parent;
     };
 
     var _checkElement = function (element) {
       if (_isDisabled(element)) { return null; }
       element.checked = true;
-      _dispatchEvent(element, 'change');
-      _dispatchEvent(element, 'click');
+      _htmlEvent(element, 'change');
+      _mouseEvent(element, 'click');
       return element;
     };
 
@@ -327,14 +333,14 @@ var FQ = function() {
       }
       results = Array.prototype.reduce.call(
         parent.childNodes,
-        function (nextResults, child) {
+        function (nextResults, child, i) {
           if (!filterMethod(child)) {
             if (self.options.endBy && isSelfOrChild(child, self.options.endBy)) {
               self.isEnded = true;
             }
             return nextResults;
           }
-          return nextResults.concat(
+          return results.concat(
             findDeeps(child, findMethod, filterMethod, preferDescendant)
           );
         },
