@@ -333,14 +333,14 @@ var FQ = function() {
       }
       results = Array.prototype.reduce.call(
         parent.childNodes,
-        function (nextResults, child, i) {
+        function (nextResults, child) {
           if (!filterMethod(child)) {
             if (self.options.endBy && isSelfOrChild(child, self.options.endBy)) {
               self.isEnded = true;
             }
             return nextResults;
           }
-          return results.concat(
+          return nextResults.concat(
             findDeeps(child, findMethod, filterMethod, preferDescendant)
           );
         },
