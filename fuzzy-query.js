@@ -773,5 +773,5 @@ var FQ = function() {
 };
 
 if (typeof window === 'undefined') {
-  module.exports = Q;
+  module.exports = FQ;
 }
