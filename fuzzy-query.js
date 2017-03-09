@@ -86,7 +86,6 @@ var FQ = function() {
       if (_isDisabled(element)) { return null; }
       element.checked = true;
       _htmlEvent(element, 'change');
-      _mouseEvent(element, 'click');
       return element;
     };
 
