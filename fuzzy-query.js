@@ -653,9 +653,15 @@ var FQ = function() {
 
     // convert candidates to candidates object list
     var candidateNodesToObj = function (candidateNodes, finderOptions) {
+      var finderOptionsClone = {};
+      if (finderOptions != undefined) {
+        Object.keys(finderOptions).forEach(function (key) {
+          finderOptionsClone[key] = finderOptions[key];
+        });
+      }
       return {
         nodes: candidateNodes,
-        finderOptions: finderOptions || {}
+        finderOptions: finderOptionsClone
       };
     };
 

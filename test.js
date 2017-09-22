@@ -122,6 +122,9 @@ describe('fuzzy-query', function() {
       expect(FQ({ heading: /class A/ }, { heading: /Ken/ }, /male/, /male/)).toBe(
         null
       );
+      expect(FQ(
+        { heading: /class A/ }, { heading: '.student' }, '.name', '.sex', /female/, 2
+      ).text()).toBe('Hanako')
     });
   });
 
