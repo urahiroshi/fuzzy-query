@@ -1,6 +1,6 @@
 {
   "name": "fuzzy-query",
-  "version": "0.4.5",
+  "version": "0.5.0",
   "description": "Intuitive query to select HTML element and operate input action.",
   "main": "fuzzy-query.js",
   "scripts": {
