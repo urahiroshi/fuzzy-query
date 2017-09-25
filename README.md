@@ -96,7 +96,7 @@ fuzzy-query
 
 ##### group member selector
 
-grouping elements by group value (need to be query selector),
+grouping elements by group value (need to be css selector),
 member and post selectors will search nodes between grouping elements.
 
   ```html
@@ -114,8 +114,10 @@ member and post selectors will search nodes between grouping elements.
 ##### heading selector
 
 find "heading element" by heading key,
-and find next element until "next heading element"
-which has same style (*) of heading element.
+and find next element until "next heading element".
+
+if RegExp selector is specified to find heading element, element having same style (*) of heading element will be next heading element.
+(if css selector is specified, element matching css selector will be next.)
 
 *same style means two elements having same class, style attributes and
 same style ancestors.

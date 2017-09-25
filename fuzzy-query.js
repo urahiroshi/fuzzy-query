@@ -607,9 +607,26 @@ var FQ = function() {
       return isSameStyle(element1.parentElement, element2.parentElement);
     };
 
+    var getEndNodeByCssSelector = function (startNode, cssSelector) {
+      var candidates = querySelectorAll(root, cssSelector);
+      return findLatest(startNode, function (node) {
+        return findDeep(
+          node,
+          // find method
+          function (n) { return candidates.indexOf(n) >= 0; },
+          // filter method
+          isVisibleElement
+        );
+      });
+    };
+
     var getEndNodeByHeadingSelector = function (headingNode, selector) {
       if (headingNode.nodeType !== Node.ELEMENT_NODE) {
         headingNode = headingNode.parentElement;
+      }
+      // it only allows reg / css selector
+      if (!isRegExp(selector.heading)) {
+        return getEndNodeByCssSelector(headingNode, selector.heading);
       }
       return findLatest(headingNode, function(node) {
         return findDeep(
@@ -623,16 +640,8 @@ var FQ = function() {
     };
 
     var getEndNodeByGroupMemberSelector = function (memberNode, selector) {
-      var groupElements = querySelectorAll(root, selector.group);
-      return findLatest(memberNode, function (node) {
-        return findDeep(
-          node,
-          // find method
-          function (n) { return groupElements.indexOf(n) >= 0; },
-          // filter method
-          isVisibleElement
-        );
-      });
+      // it only allows css selector
+      return getEndNodeByCssSelector(memberNode, selector.group);
     };
 
     // set finderOptions for later selectors

@@ -115,6 +115,10 @@ describe('fuzzy-query', function() {
       expect(FQ({ heading: /ruby/ }, /foo/, /foo/)).not.toBe(null);
     });
 
+    it('regard same heading if css selector is matched', function () {
+      expect(FQ({ heading: '.colors' }, /foo/, /foo/ )).toBe(null);
+    });
+
     it('should work by nested heading selector', function () {
       expect(FQ({ heading: /class A/ }, { heading: /Ken/ }, /male/).element.id).toBe(
         'ex-nested-heading-selector'
