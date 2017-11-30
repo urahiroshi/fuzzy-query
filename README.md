@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/urahiroshi/fuzzy-query.svg?style=svg)](https://circleci.com/gh/urahiroshi/fuzzy-query)
+
 fuzzy-query
 ===========
 
