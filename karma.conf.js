@@ -29,7 +29,7 @@ module.exports = function(config) {
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
       '**/*.html': ['html2js'],
-      'test.js': ['coverage']
+      'fuzzy-query.js': ['coverage']
     },
 
 
