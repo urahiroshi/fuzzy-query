@@ -1,2 +1,5 @@
-comment:
-  require_changes: no
+coverage:
+  status:
+    project:
+      default:
+        target: 85%
