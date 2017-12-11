@@ -1,8 +1,2 @@
-coverage:
-  status:
-    project:
-      default:
-        # basic
-        target: 85%
-        threshould: 85%
-        base: null
+comment:
+  require_changes: no
