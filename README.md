@@ -1,5 +1,7 @@
 [![CircleCI](https://circleci.com/gh/urahiroshi/fuzzy-query.svg?style=svg)](https://circleci.com/gh/urahiroshi/fuzzy-query)
 
+[![codecov](https://codecov.io/gh/urahiroshi/fuzzy-query/branch/master/graph/badge.svg)](https://codecov.io/gh/urahiroshi/fuzzy-query)
+
 fuzzy-query
 ===========
 
