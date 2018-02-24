@@ -786,6 +786,6 @@ var FQ = function() {
   }
 };
 
-if (typeof window === 'undefined') {
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
   module.exports = FQ;
 }
